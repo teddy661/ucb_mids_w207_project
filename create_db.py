@@ -1,15 +1,19 @@
 import io
+import os
 import sqlite3
 from hashlib import blake2b
 from pathlib import Path
+import argparse
 
 import pandas as pd
 from PIL import Image
 
 ROOT_DIR = Path(r"C:\Users\teddy\Documents\01-Berkeley\W207\facial-keypoints-detection")
-TEST_DATA = ROOT_DIR.joinpath("data", "test.csv")
-TRAIN_DATA = ROOT_DIR.joinpath("data", "training.csv")
-TRAIN_DB = ROOT_DIR.joinpath("db", "training.db")
+DATA_DIR = ROOT_DIR.joinpath("data")
+DB_DIR = ROOT_DIR.joinpath("db")
+TEST_DATA = DATA_DIR.joinpath("test.csv")
+TRAIN_DATA = DATA_DIR.joinpath("training.csv")
+TRAIN_DB = DB_DIR.joinpath("training.db")
 
 
 def create_image(pixel_string):
@@ -47,9 +51,64 @@ def main():
     :return:
     :rtype:
     """
+    parser = argparse.ArgumentParser(
+        description="Create an sqlite database from csv files and generate png files from raw image pixels "
+    )
+    parser.add_argument(
+        "-f",
+        help="overwrite existing database",
+        dest="enable_overwrite",
+        action="store_true",
+    )
+    args = parser.parse_args()
+    prog_name = parser.prog
+
+    if not ROOT_DIR.is_dir():
+        print(
+            "Terminating, root directory does not exist or is not a directory {0}".format(
+                ROOT_DIR
+            )
+        )
+        exit()
+
+    if not TEST_DATA.is_file():
+        print(
+            "Terminating, Test data csv file doe not exist or is not a file {0}".format(
+                TEST_DATA
+            )
+        )
+        exit()
+
+    if not TRAIN_DATA.is_file():
+        print(
+            "Terminating, Training data csv file doe not exist or is not a file {0}".format(
+                TRAIN_DATA
+            )
+        )
+        exit()
+
+    if not DB_DIR.exists():
+        os.mkdir(DB_DIR)
+
+    if args.enable_overwrite:
+        try:
+            os.remove(TRAIN_DB)
+        except OSError:
+            pass
+
+    elif TRAIN_DB.is_file() and not args.enable_overwrite :
+        print(
+            "Database exists, will not overwrite. Use -f flag to force overwrite {0}".format(
+                TRAIN_DB
+            )
+        )
+        exit()
+
     df = pd.read_csv(TRAIN_DATA, encoding="utf8")
-    df["png_image"] = df["Image"].apply(create_image)
+    df.rename(columns={"Image": "image_raw_pixels"}, inplace=True)
+    df["png_image"] = df["image_raw_pixels"].apply(create_image)
     df["png_hash"] = df["png_image"].apply(calc_hash)
+
     sqcon = sqlite3.connect(TRAIN_DB)
     sqcur = sqcon.cursor()
 
@@ -57,7 +116,11 @@ def main():
     sqcur.execute("""PRAGMA temp_store=2""")
     sqcur.execute("""PRAGMA locking_mode=EXCLUSIVE""")
     sqcur.execute("""PRAGMA cache_size=-65536""")
-    df.to_sql("training_data", sqcon, if_exists="replace", index=True)
+    df.to_sql("image_data", sqcon, if_exists="replace", index=True)
+    sqcur.execute(
+        """CREATE INDEX IF NOT EXISTS idx_image_hash on image_data (png_hash)"""
+    )
+    sqcur.execute("""ANALYZE""")
     sqcon.commit()
     sqcon.close()
 

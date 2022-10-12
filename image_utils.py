@@ -6,11 +6,32 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 
-def get_image(sqcur):
-    sqcur.execute("""SELECT png_image FROM training_data LIMIT 1""")
+def get_image_from_db(sqcur):
+    """
+
+    :param sqcur:
+    :type sqcur:
+    :return:
+    :rtype:
+    """
+    sqcur.execute("""SELECT rowid, png_hash, png_image FROM image_data LIMIT 1""")
     rows = sqcur.fetchall()
-    image = rows[0][0]
+    image = rows[0][2]
     return image
+
+
+def get_points_from_db(sqcur):
+    """
+
+    :param sqcur:
+    :type sqcur:
+    :return:
+    :rtype:
+    """
+    sqcur.execute(
+        """SELECT rowid, png_hash, left_eye_center_x, left_eye_center_y FROM image_data LIMIT 1"""
+    )
+
 
 ##
 ## Some proof of concept image stuff. To how it works.
@@ -25,7 +46,7 @@ def main():
         description="Utilities For Working with Face Images",
     )
     parser.add_argument(
-        "-f",
+        "-d",
         dest="db_file",
         type=str,
         required=True,
@@ -40,14 +61,16 @@ def main():
     else:
         print("Database didn't exist! Try again")
         exit()
+
     sqcon = sqlite3.connect(db)
     sqcur = sqcon.cursor()
-    image_data = get_image(sqcur)
+
+    image_data = get_image_from_db(sqcur)
     buf_image_data = BytesIO(image_data)
     im = Image.open(buf_image_data).convert("RGB")
     draw = ImageDraw.Draw(im)
     sqcur.execute(
-        """SELECT left_eye_center_x,left_eye_center_y FROM training_data LIMIT 1"""
+        """SELECT left_eye_center_x,left_eye_center_y FROM image_data LIMIT 1"""
     )
     rows = sqcur.fetchall()
     draw.point([rows[0][0], rows[0][1]], fill="red")
