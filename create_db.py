@@ -96,7 +96,7 @@ def main():
         except OSError:
             pass
 
-    elif TRAIN_DB.is_file() and not args.enable_overwrite :
+    elif TRAIN_DB.is_file() and not args.enable_overwrite:
         print(
             "Database exists, will not overwrite. Use -f flag to force overwrite {0}".format(
                 TRAIN_DB
