@@ -8,13 +8,6 @@ import argparse
 import pandas as pd
 from PIL import Image
 
-ROOT_DIR = Path(r"C:\Users\teddy\Documents\01-Berkeley\W207\facial-keypoints-detection")
-DATA_DIR = ROOT_DIR.joinpath("data")
-DB_DIR = ROOT_DIR.joinpath("db")
-TEST_DATA = DATA_DIR.joinpath("test.csv")
-TRAIN_DATA = DATA_DIR.joinpath("training.csv")
-TRAIN_DB = DB_DIR.joinpath("training.db")
-
 
 def create_image(pixel_string):
     """
@@ -60,8 +53,24 @@ def main():
         dest="enable_overwrite",
         action="store_true",
     )
+    parser.add_argument(
+        "-d",
+        dest="root_directory",
+        type=str,
+        required=True,
+        metavar="character_string",
+        help="path to database",
+    )
+
     args = parser.parse_args()
     prog_name = parser.prog
+
+    ROOT_DIR = Path(args.root_directory)
+    DATA_DIR = ROOT_DIR.joinpath("data")
+    DB_DIR = ROOT_DIR.joinpath("db")
+    TEST_DATA = DATA_DIR.joinpath("test.csv")
+    TRAIN_DATA = DATA_DIR.joinpath("training.csv")
+    TRAIN_DB = DB_DIR.joinpath("training.db")
 
     if not ROOT_DIR.is_dir():
         print(
