@@ -1,5 +1,7 @@
 import argparse
 import sqlite3
+import dataclasses
+from dataclasses import dataclass, field
 from io import BytesIO
 from pathlib import Path
 
@@ -94,7 +96,7 @@ def get_face_points_from_db(sqcur, rowid, png_hash):
         Point(rows[0][28], rows[0][29]),
         Point(rows[0][30], rows[0][31]),
     )
-    return FaceData
+    return result
 
 
 #
@@ -136,11 +138,22 @@ def main():
     buf_image_data = BytesIO(image_data)
     im = Image.open(buf_image_data).convert("RGB")
     draw = ImageDraw.Draw(im)
-    sqcur.execute(
-        """SELECT left_eye_center_x,left_eye_center_y FROM image_data LIMIT 1"""
-    )
     rows = sqcur.fetchall()
-    draw.point([rows[0][0], rows[0][1]], fill="red")
+    draw.point(dataclasses.astuple(face_points.left_eye_center), fill="red")
+    draw.point(dataclasses.astuple(face_points.left_eye_inner_corner), fill="red")
+    draw.point(dataclasses.astuple(face_points.left_eye_outer_corner), fill="red")
+    draw.point(dataclasses.astuple(face_points.right_eye_center), fill="orange")
+    draw.point(dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange")
+    draw.point(dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange")
+    draw.point(dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green")
+    draw.point(dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green")
+    draw.point(dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue")
+    draw.point(dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue")
+    draw.point(dataclasses.astuple(face_points.nose_tip), fill="yellow")
+    draw.point(dataclasses.astuple(face_points.mouth_left_corner), fill="magenta")
+    draw.point(dataclasses.astuple(face_points.mouth_right_corner), fill="magenta")
+    draw.point(dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta")
+    draw.point(dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta")
     im.show()
     sqcon.close()
 
