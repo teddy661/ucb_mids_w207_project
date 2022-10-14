@@ -200,11 +200,16 @@ def main():
     sqcon = sqlite3.connect(db)
     sqcur = sqcon.cursor()
 
-    face_points = get_face_points_from_db(sqcur, 7049)
-    image_data = get_image_from_db(sqcur, 7049)
-    buf_image_data = BytesIO(image_data)
-    image_with_points = draw_facepoints_on_image(buf_image_data, face_points)
-    image_with_points.show()
+    sqcur.execute(
+        """SELECT rowid FROM image_data WHERE png_hash = 'fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b'"""
+    )
+    duplicate_rows = sqcur.fetchall()
+    for row in duplicate_rows:
+        face_points = get_face_points_from_db(sqcur, row[0])
+        image_data = get_image_from_db(sqcur, row[0])
+        buf_image_data = BytesIO(image_data)
+        image_with_points = draw_facepoints_on_image(buf_image_data, face_points)
+        image_with_points.show()
 
     sqcon.close()
 
