@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass()
 class Point:
     x: int
     y: int
 
 
-@dataclass
+@dataclass()
 class FaceData:
     """FaceData for facial-keypoints-detection"""
 

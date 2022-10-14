@@ -1,16 +1,16 @@
 import argparse
-import sqlite3
 import dataclasses
-from dataclasses import dataclass, field
+import sqlite3
 from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw
+
 from facedata import FaceData
 from facedata import Point
 
 
-def get_image_from_db(sqcur):
+def get_image_from_db(sqcur, rowid):
     """
 
     :param sqcur:
@@ -18,13 +18,18 @@ def get_image_from_db(sqcur):
     :return:
     :rtype:
     """
-    sqcur.execute("""SELECT rowid, png_hash, png_image FROM image_data LIMIT 1""")
+    sqcur.execute(
+        """SELECT rowid, png_hash, png_image FROM image_data WHERE rowid=?""", (rowid,)
+    )
     rows = sqcur.fetchall()
-    image = rows[0][2]
-    return image
+    if len(rows) != 1:
+        print("get_image_from_db returned more than one row. That's very bad. ")
+        return None
+    else:
+        return rows[0][2]
 
 
-def get_face_points_from_db(sqcur, rowid, png_hash):
+def get_face_points_from_db(sqcur, rowid):
     """
 
     :param sqcur:
@@ -64,11 +69,8 @@ def get_face_points_from_db(sqcur, rowid, png_hash):
                     mouth_center_top_lip_x,
                     mouth_center_top_lip_y,
                     mouth_center_bottom_lip_x,
-                    mouth_center_bottom_lip_y FROM image_data WHERE rowid = ? AND png_hash = ?""",
-        (
-            rowid,
-            png_hash,
-        ),
+                    mouth_center_bottom_lip_y FROM image_data WHERE rowid = ?""",
+        (rowid,),
     )
     rows = sqcur.fetchall()
     if len(rows) == 0:
@@ -97,6 +99,73 @@ def get_face_points_from_db(sqcur, rowid, png_hash):
         Point(rows[0][30], rows[0][31]),
     )
     return result
+
+
+def draw_facepoints_on_image(image_data, face_points):
+    im = Image.open(image_data).convert("RGB")
+    draw = ImageDraw.Draw(im)
+    if face_points.left_eye_center.x is not None:
+        draw.point(dataclasses.astuple(face_points.left_eye_center), fill="red")
+
+    if face_points.left_eye_inner_corner.x is not None:
+        draw.point(dataclasses.astuple(face_points.left_eye_inner_corner), fill="red")
+
+    if face_points.left_eye_outer_corner.x is not None:
+        draw.point(dataclasses.astuple(face_points.left_eye_outer_corner), fill="red")
+
+    if face_points.right_eye_center.x is not None:
+        draw.point(dataclasses.astuple(face_points.right_eye_center), fill="orange")
+
+    if face_points.right_eye_inner_corner.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange"
+        )
+
+    if face_points.right_eye_outer_corner.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange"
+        )
+
+    if face_points.left_eyebrow_inner_end.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green"
+        )
+
+    if face_points.left_eyebrow_outer_end.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green"
+        )
+
+    if face_points.right_eyebrow_inner_end.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue"
+        )
+
+    if face_points.right_eyebrow_outer_end.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue"
+        )
+
+    if face_points.nose_tip.x is not None:
+        draw.point(dataclasses.astuple(face_points.nose_tip), fill="yellow")
+
+    if face_points.mouth_left_corner.x is not None:
+        draw.point(dataclasses.astuple(face_points.mouth_left_corner), fill="magenta")
+
+    if face_points.mouth_right_corner.x is not None:
+        draw.point(dataclasses.astuple(face_points.mouth_right_corner), fill="magenta")
+
+    if face_points.mouth_center_top_lip.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta"
+        )
+
+    if face_points.mouth_center_bottom_lip.x is not None:
+        draw.point(
+            dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta"
+        )
+
+    return im
 
 
 #
@@ -131,30 +200,12 @@ def main():
     sqcon = sqlite3.connect(db)
     sqcur = sqcon.cursor()
 
-    row_id = 1
-    my_png_hash = "2dd2b74d17693c1290fde72ede8c08edcfbcc86818933ab65a4d6e87ae83bd1db305cbff4d65690dbdf1753d905aee7e68cbe7b2c2f4d8d879aa2c655f2c4521"
-    face_points = get_face_points_from_db(sqcur, row_id, my_png_hash)
-    image_data = get_image_from_db(sqcur)
+    face_points = get_face_points_from_db(sqcur, 7049)
+    image_data = get_image_from_db(sqcur, 7049)
     buf_image_data = BytesIO(image_data)
-    im = Image.open(buf_image_data).convert("RGB")
-    draw = ImageDraw.Draw(im)
-    rows = sqcur.fetchall()
-    draw.point(dataclasses.astuple(face_points.left_eye_center), fill="red")
-    draw.point(dataclasses.astuple(face_points.left_eye_inner_corner), fill="red")
-    draw.point(dataclasses.astuple(face_points.left_eye_outer_corner), fill="red")
-    draw.point(dataclasses.astuple(face_points.right_eye_center), fill="orange")
-    draw.point(dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange")
-    draw.point(dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange")
-    draw.point(dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green")
-    draw.point(dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green")
-    draw.point(dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue")
-    draw.point(dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue")
-    draw.point(dataclasses.astuple(face_points.nose_tip), fill="yellow")
-    draw.point(dataclasses.astuple(face_points.mouth_left_corner), fill="magenta")
-    draw.point(dataclasses.astuple(face_points.mouth_right_corner), fill="magenta")
-    draw.point(dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta")
-    draw.point(dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta")
-    im.show()
+    image_with_points = draw_facepoints_on_image(buf_image_data, face_points)
+    image_with_points.show()
+
     sqcon.close()
 
 

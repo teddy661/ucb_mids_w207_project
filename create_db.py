@@ -1,9 +1,9 @@
+import argparse
 import io
 import os
 import sqlite3
 from hashlib import blake2b
 from pathlib import Path
-import argparse
 
 import pandas as pd
 from PIL import Image
