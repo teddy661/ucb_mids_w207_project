@@ -10,6 +10,19 @@ from facedata import FaceData
 from facedata import Point
 
 
+def get_duplicate_images(sqcur):
+    """
+    Find duplicate png files in data
+    :param sqcur:
+    :return:
+    """
+    sqcur.execute(
+        """SELECT COUNT(png_hash),png_hash FROM image_data GROUP BY png_hash HAVING COUNT(png_hash)>1 ORDER BY COUNT(png_hash) ASC;"""
+    )
+    rows = sqcur.fetchall()
+    return rows
+
+
 def get_image_from_db(sqcur, rowid):
     """
 
