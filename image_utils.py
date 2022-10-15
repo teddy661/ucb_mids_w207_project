@@ -70,6 +70,24 @@ def get_images_missing_data(sqcur, col_root_name):
     return rows
 
 
+def get_duplicate_images_with_count(sqcur):
+    sqcur.execute(
+        """
+    SELECT
+        COUNT(png_hash),
+        png_hash
+    FROM
+        dup_images
+    GROUP BY
+        png_hash
+    ORDER BY
+        COUNT(png_hash) ASC;
+    """
+    )
+    rows = sqcur.fetchall()
+    return rows
+
+
 def get_data_column_names(sqcur):
     sqcur.execute(
         """
@@ -273,6 +291,11 @@ def main():
         print(f"Feature: {col:<25} Missing: {len(get_images_missing_data(sqcur, col))}")
 
     #####
+    print("")
+    print("")
+    duplicate_images = get_duplicate_images_with_count(sqcur)
+    for image in duplicate_images:
+        print(f"Count: {image[0]} Hash (first 10 only): {image[1][:10]}")
 
     sqcur.execute(
         """
