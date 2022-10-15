@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+import re
 import sqlite3
 from io import BytesIO
 from pathlib import Path
@@ -8,19 +9,6 @@ from PIL import Image, ImageDraw
 
 from facedata import FaceData
 from facedata import Point
-
-
-def get_duplicate_images(sqcur):
-    """
-    Find duplicate png files in data
-    :param sqcur:
-    :return:
-    """
-    sqcur.execute(
-        """SELECT COUNT(png_hash),png_hash FROM image_data GROUP BY png_hash HAVING COUNT(png_hash)>1 ORDER BY COUNT(png_hash) ASC;"""
-    )
-    rows = sqcur.fetchall()
-    return rows
 
 
 def get_image_from_db(sqcur, rowid):
@@ -32,7 +20,17 @@ def get_image_from_db(sqcur, rowid):
     :rtype:
     """
     sqcur.execute(
-        """SELECT rowid, png_hash, png_image FROM image_data WHERE rowid=?""", (rowid,)
+        """
+        SELECT
+            rowid,
+            png_hash,
+            png_image
+        FROM
+            image_data
+        WHERE
+            rowid = ?
+        """,
+        (rowid,),
     )
     rows = sqcur.fetchall()
     if len(rows) != 1:
@@ -40,6 +38,54 @@ def get_image_from_db(sqcur, rowid):
         return None
     else:
         return rows[0][2]
+
+
+def get_images_missing_data(sqcur, col_root_name):
+    query = """
+    SELECT
+        rowid,
+        png_hash
+    FROM
+        image_data
+    WHERE
+        rowid IN (
+            SELECT
+                rowid
+            FROM
+                image_data
+            WHERE
+                {0}_x IS NULL
+            UNION
+            SELECT
+                rowid 
+            FROM 
+                image_data
+            WHERE
+                {0}_y IS NULL);
+                """.format(
+        col_root_name
+    )
+    sqcur.execute(query)
+    rows = sqcur.fetchall()
+    return rows
+
+
+def get_data_column_names(sqcur):
+    sqcur.execute(
+        """
+    SELECT
+        name
+    FROM
+        PRAGMA_TABLE_INFO ('image_data');
+    """
+    )
+    rows = sqcur.fetchall()
+    valid = re.compile("\w+_(x|y)$")
+    point_cols = []
+    for col in rows:
+        if valid.fullmatch(col[0]):
+            point_cols.append(col[0][:-2])
+    return sorted(set(point_cols))
 
 
 def get_face_points_from_db(sqcur, rowid):
@@ -51,38 +97,45 @@ def get_face_points_from_db(sqcur, rowid):
     :rtype:
     """
     sqcur.execute(
-        """SELECT   rowid, 
-                    png_hash,   
-                    left_eye_center_x, 
-                    left_eye_center_y, 
-                    right_eye_center_x,
-                    right_eye_center_y,
-                    left_eye_inner_corner_x,
-                    left_eye_inner_corner_y,
-                    left_eye_outer_corner_x,
-                    left_eye_outer_corner_y,
-                    right_eye_inner_corner_x,
-                    right_eye_inner_corner_y,
-                    right_eye_outer_corner_x,
-                    right_eye_outer_corner_y,
-                    left_eyebrow_inner_end_x,
-                    left_eyebrow_inner_end_y,
-                    left_eyebrow_outer_end_x,
-                    left_eyebrow_outer_end_y,
-                    right_eyebrow_inner_end_x,
-                    right_eyebrow_inner_end_y,
-                    right_eyebrow_outer_end_x,
-                    right_eyebrow_outer_end_y,
-                    nose_tip_x,
-                    nose_tip_y,
-                    mouth_left_corner_x,
-                    mouth_left_corner_y,
-                    mouth_right_corner_x,
-                    mouth_right_corner_y,
-                    mouth_center_top_lip_x,
-                    mouth_center_top_lip_y,
-                    mouth_center_bottom_lip_x,
-                    mouth_center_bottom_lip_y FROM image_data WHERE rowid = ?""",
+        """
+        SELECT
+            rowid,
+            png_hash,
+            left_eye_center_x,
+            left_eye_center_y,
+            right_eye_center_x,
+            right_eye_center_y,
+            left_eye_inner_corner_x,
+            left_eye_inner_corner_y,
+            left_eye_outer_corner_x,
+            left_eye_outer_corner_y,
+            right_eye_inner_corner_x,
+            right_eye_inner_corner_y,
+            right_eye_outer_corner_x,
+            right_eye_outer_corner_y,
+            left_eyebrow_inner_end_x,
+            left_eyebrow_inner_end_y,
+            left_eyebrow_outer_end_x,
+            left_eyebrow_outer_end_y,
+            right_eyebrow_inner_end_x,
+            right_eyebrow_inner_end_y,
+            right_eyebrow_outer_end_x,
+            right_eyebrow_outer_end_y,
+            nose_tip_x,
+            nose_tip_y,
+            mouth_left_corner_x,
+            mouth_left_corner_y,
+            mouth_right_corner_x,
+            mouth_right_corner_y,
+            mouth_center_top_lip_x,
+            mouth_center_top_lip_y,
+            mouth_center_bottom_lip_x,
+            mouth_center_bottom_lip_y
+        FROM
+            image_data
+        WHERE
+            rowid = ?
+        """,
         (rowid,),
     )
     rows = sqcur.fetchall()
@@ -213,8 +266,24 @@ def main():
     sqcon = sqlite3.connect(db)
     sqcur = sqcon.cursor()
 
+    ####
+
+    data_cols = get_data_column_names(sqcur)
+    for col in data_cols:
+        print(f"Feature: {col:<25} Missing: {len(get_images_missing_data(sqcur, col))}")
+
+    #####
+
     sqcur.execute(
-        """SELECT rowid FROM image_data WHERE png_hash = 'fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b'"""
+        """
+    SELECT
+        rowid
+    FROM
+        image_data
+    WHERE
+        png_hash = 'fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b'
+
+    """
     )
     duplicate_rows = sqcur.fetchall()
     for row in duplicate_rows:
@@ -222,7 +291,7 @@ def main():
         image_data = get_image_from_db(sqcur, row[0])
         buf_image_data = BytesIO(image_data)
         image_with_points = draw_facepoints_on_image(buf_image_data, face_points)
-        image_with_points.show()
+        # image_with_points.show()
 
     sqcon.close()
 

@@ -38,6 +38,31 @@ def calc_hash(input_bytes):
     return my_hash.hexdigest()
 
 
+def create_duplicate_image_view(sqcur):
+    sqcur.execute(
+        """
+            CREATE VIEW dup_images AS
+            SELECT
+                rowid,
+                png_hash
+            FROM
+                image_data
+            WHERE
+                png_hash IN (
+                    SELECT
+                        png_hash
+                    FROM
+                        image_data
+                    GROUP BY
+                        png_hash
+                    HAVING
+                        COUNT(png_hash) > 1)
+            ORDER BY
+                png_hash
+    """
+    )
+
+
 def main():
     """
     Generate sqlite database from a pandas table.
@@ -125,7 +150,9 @@ def main():
     sqcur.execute("""PRAGMA temp_store=2""")
     sqcur.execute("""PRAGMA locking_mode=EXCLUSIVE""")
     sqcur.execute("""PRAGMA cache_size=-65536""")
+    sqcur.execute("""PRAGMA synchronous = 0""")
     df.to_sql("image_data", sqcon, if_exists="replace", index=True)
+    create_duplicate_image_view(sqcon)
     sqcur.execute(
         """CREATE INDEX IF NOT EXISTS idx_image_hash on image_data (png_hash)"""
     )
