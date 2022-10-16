@@ -82,7 +82,7 @@ def main():
         "-d",
         dest="root_directory",
         type=str,
-        required=True,
+        default=".",
         metavar="character_string",
         help="path to database",
     )

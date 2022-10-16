@@ -281,13 +281,18 @@ def main():
         "-d",
         dest="db_file",
         type=str,
-        required=True,
+        required=False,
         metavar="character_string",
         help="path to database",
     )
     args = parser.parse_args()
     prog_name = parser.prog
-    check_file = Path(args.db_file)
+
+    if args.db_file is not None:
+        check_file = Path(args.db_file)
+    else: # use default
+        check_file = (Path(__file__).parent / "db/training.db").resolve()
+        
     if check_file.is_file():
         db = check_file.resolve()
     else:
