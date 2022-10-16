@@ -310,6 +310,9 @@ def main():
         print(f"Count: {image[0]} Hash (first 10 only): {image[1][:10]}")
 
     ##### Render composite with all images and facepoints
+    print("")
+    print("")
+    print("Annotating All Images")
     unique_images = get_all_images(sqcur)
     unique_images_annotated = []
     for image in unique_images:
@@ -326,10 +329,15 @@ def main():
     # 1 | 7 | 19 | 53 | 133 | 371 | 1007 | 7049
     dst = Image.new("RGB", (96 * 19, 96 * 371))
     i = 0
+    print("Build composite image")
     for y in range(371):
         for x in range(19):
             dst.paste(unique_images_annotated[i], (x * 96, y * 96))
             i = i + 1
+
+    print("Save composite image")
+    dst.save("composite_image.png", format="png", optimize=True)
+    print("Display composite image")
     dst.show()
     sqcon.close()
 
