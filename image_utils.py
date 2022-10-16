@@ -70,6 +70,19 @@ def get_images_missing_data(sqcur, col_root_name):
     return rows
 
 
+def get_all_images(sqcur):
+    sqcur.execute(
+        """
+    SELECT  
+        rowid,png_hash,png_image
+    FROM
+        image_data
+    """
+    )
+    rows = sqcur.fetchall()
+    return rows
+
+
 def get_duplicate_images_with_count(sqcur):
     sqcur.execute(
         """
@@ -98,7 +111,7 @@ def get_data_column_names(sqcur):
     """
     )
     rows = sqcur.fetchall()
-    valid = re.compile("\w+_(x|y)$")
+    valid = re.compile("\w+(_x|_y)$")
     point_cols = []
     for col in rows:
         if valid.fullmatch(col[0]):
@@ -284,38 +297,40 @@ def main():
     sqcon = sqlite3.connect(db)
     sqcur = sqcon.cursor()
 
-    ####
-
+    #### Missing features
     data_cols = get_data_column_names(sqcur)
     for col in data_cols:
         print(f"Feature: {col:<25} Missing: {len(get_images_missing_data(sqcur, col))}")
 
-    #####
+    ##### Counts up duplicate pictures
     print("")
     print("")
     duplicate_images = get_duplicate_images_with_count(sqcur)
     for image in duplicate_images:
         print(f"Count: {image[0]} Hash (first 10 only): {image[1][:10]}")
 
-    sqcur.execute(
-        """
-    SELECT
-        rowid
-    FROM
-        image_data
-    WHERE
-        png_hash = 'fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b'
-
-    """
-    )
-    duplicate_rows = sqcur.fetchall()
-    for row in duplicate_rows:
-        face_points = get_face_points_from_db(sqcur, row[0])
-        image_data = get_image_from_db(sqcur, row[0])
+    ##### Render composite with all images and facepoints
+    unique_images = get_all_images(sqcur)
+    unique_images_annotated = []
+    for image in unique_images:
+        face_points = get_face_points_from_db(sqcur, image[0])
+        image_data = get_image_from_db(sqcur, image[0])
         buf_image_data = BytesIO(image_data)
-        image_with_points = draw_facepoints_on_image(buf_image_data, face_points)
+        unique_images_annotated.append(
+            draw_facepoints_on_image(buf_image_data, face_points)
+        )
+        # draw = ImageDraw.Draw(image_with_points)
+        # draw.text((0,0),"fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b", (0,0,0))
         # image_with_points.show()
-
+    # factors of 7049
+    # 1 | 7 | 19 | 53 | 133 | 371 | 1007 | 7049
+    dst = Image.new("RGB", (96 * 19, 96 * 371))
+    i = 0
+    for y in range(371):
+        for x in range(19):
+            dst.paste(unique_images_annotated[i], (x * 96, y * 96))
+            i = i + 1
+    dst.show()
     sqcon.close()
 
 
