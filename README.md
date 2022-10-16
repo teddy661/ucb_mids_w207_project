@@ -4,15 +4,15 @@ W207 Final Project
 
 Expected file structure:
 
-```
-|-- project root
-|-- .gitignore
+```{bash}
+.
 |-- python scripts
-|-- README.md
 |-- data
 |   |-- *.csv
-|-- db
+├── db
 |   |-- *.db
+└── README.md
+
 ```
 
 Only do one of these
@@ -27,7 +27,3 @@ alternatively if you already created the database, but you want to now delete it
 Check that the utility tools work. Pass in `-d path/to/testing.db` to specify the database location. Default is `./db/testing.db`.
 
 `python image_utils.py`
-
-```
-
-```

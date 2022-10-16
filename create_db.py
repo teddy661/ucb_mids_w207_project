@@ -39,8 +39,7 @@ def calc_hash(input_bytes):
 
 
 def create_duplicate_image_view(sqcur):
-    sqcur.execute(
-        """
+    sqcur.execute("""
             CREATE VIEW dup_images AS
             SELECT
                 rowid,
@@ -59,8 +58,7 @@ def create_duplicate_image_view(sqcur):
                         COUNT(png_hash) > 1)
             ORDER BY
                 png_hash
-    """
-    )
+    """)
 
 
 def main():
@@ -70,8 +68,7 @@ def main():
     :rtype:
     """
     parser = argparse.ArgumentParser(
-        description="Create an sqlite database from csv files and generate png files from raw image pixels "
-    )
+        description="Create an sqlite database from csv files and generate png files from raw image pixels ")
     parser.add_argument(
         "-f",
         help="overwrite existing database",
@@ -82,7 +79,7 @@ def main():
         "-d",
         dest="root_directory",
         type=str,
-        default=".",
+        default="..",
         metavar="character_string",
         help="path to database",
     )
@@ -98,27 +95,15 @@ def main():
     TRAIN_DB = DB_DIR.joinpath("training.db")
 
     if not ROOT_DIR.is_dir():
-        print(
-            "Terminating, root directory does not exist or is not a directory {0}".format(
-                ROOT_DIR
-            )
-        )
+        print("Terminating, root directory does not exist or is not a directory {0}".format(ROOT_DIR))
         exit()
 
     if not TEST_DATA.is_file():
-        print(
-            "Terminating, Test data csv file doe not exist or is not a file {0}".format(
-                TEST_DATA
-            )
-        )
+        print("Terminating, Test data csv file doe not exist or is not a file {0}".format(TEST_DATA))
         exit()
 
     if not TRAIN_DATA.is_file():
-        print(
-            "Terminating, Training data csv file doe not exist or is not a file {0}".format(
-                TRAIN_DATA
-            )
-        )
+        print("Terminating, Training data csv file doe not exist or is not a file {0}".format(TRAIN_DATA))
         exit()
 
     if not DB_DIR.exists():
@@ -131,11 +116,7 @@ def main():
             pass
 
     elif TRAIN_DB.is_file() and not args.enable_overwrite:
-        print(
-            "Database exists, will not overwrite. Use -f flag to force overwrite {0}".format(
-                TRAIN_DB
-            )
-        )
+        print("Database exists, will not overwrite. Use -f flag to force overwrite {0}".format(TRAIN_DB))
         exit()
 
     df = pd.read_csv(TRAIN_DATA, encoding="utf8")
@@ -153,9 +134,7 @@ def main():
     sqcur.execute("""PRAGMA synchronous = 0""")
     df.to_sql("image_data", sqcon, if_exists="replace", index=True)
     create_duplicate_image_view(sqcon)
-    sqcur.execute(
-        """CREATE INDEX IF NOT EXISTS idx_image_hash on image_data (png_hash)"""
-    )
+    sqcur.execute("""CREATE INDEX IF NOT EXISTS idx_image_hash on image_data (png_hash)""")
     sqcur.execute("""ANALYZE""")
     sqcon.commit()
     sqcon.close()

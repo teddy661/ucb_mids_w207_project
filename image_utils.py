@@ -62,30 +62,25 @@ def get_images_missing_data(sqcur, col_root_name):
                 image_data
             WHERE
                 {0}_y IS NULL);
-                """.format(
-        col_root_name
-    )
+                """.format(col_root_name)
     sqcur.execute(query)
     rows = sqcur.fetchall()
     return rows
 
 
 def get_all_images(sqcur):
-    sqcur.execute(
-        """
+    sqcur.execute("""
     SELECT  
         rowid,png_hash,png_image
     FROM
         image_data
-    """
-    )
+    """)
     rows = sqcur.fetchall()
     return rows
 
 
 def get_duplicate_images_with_count(sqcur):
-    sqcur.execute(
-        """
+    sqcur.execute("""
     SELECT
         COUNT(png_hash),
         png_hash
@@ -95,21 +90,18 @@ def get_duplicate_images_with_count(sqcur):
         png_hash
     ORDER BY
         COUNT(png_hash) ASC;
-    """
-    )
+    """)
     rows = sqcur.fetchall()
     return rows
 
 
 def get_data_column_names(sqcur):
-    sqcur.execute(
-        """
+    sqcur.execute("""
     SELECT
         name
     FROM
         PRAGMA_TABLE_INFO ('image_data');
-    """
-    )
+    """)
     rows = sqcur.fetchall()
     valid = re.compile("\w+(_x|_y)$")
     point_cols = []
@@ -214,34 +206,22 @@ def draw_facepoints_on_image(image_data, face_points):
         draw.point(dataclasses.astuple(face_points.right_eye_center), fill="orange")
 
     if face_points.right_eye_inner_corner.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange"
-        )
+        draw.point(dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange")
 
     if face_points.right_eye_outer_corner.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange"
-        )
+        draw.point(dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange")
 
     if face_points.left_eyebrow_inner_end.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green"
-        )
+        draw.point(dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green")
 
     if face_points.left_eyebrow_outer_end.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green"
-        )
+        draw.point(dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green")
 
     if face_points.right_eyebrow_inner_end.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue"
-        )
+        draw.point(dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue")
 
     if face_points.right_eyebrow_outer_end.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue"
-        )
+        draw.point(dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue")
 
     if face_points.nose_tip.x is not None:
         draw.point(dataclasses.astuple(face_points.nose_tip), fill="yellow")
@@ -253,14 +233,10 @@ def draw_facepoints_on_image(image_data, face_points):
         draw.point(dataclasses.astuple(face_points.mouth_right_corner), fill="magenta")
 
     if face_points.mouth_center_top_lip.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta"
-        )
+        draw.point(dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta")
 
     if face_points.mouth_center_bottom_lip.x is not None:
-        draw.point(
-            dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta"
-        )
+        draw.point(dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta")
 
     return im
 
@@ -274,9 +250,7 @@ def main():
     :return:
     :rtype:
     """
-    parser = argparse.ArgumentParser(
-        description="Utilities For Working with Face Images",
-    )
+    parser = argparse.ArgumentParser(description="Utilities For Working with Face Images",)
     parser.add_argument(
         "-d",
         dest="db_file",
@@ -290,9 +264,9 @@ def main():
 
     if args.db_file is not None:
         check_file = Path(args.db_file)
-    else: # use default
+    else:  # use default
         check_file = (Path(__file__).parent / "db/training.db").resolve()
-        
+
     if check_file.is_file():
         db = check_file.resolve()
     else:
@@ -324,9 +298,7 @@ def main():
         face_points = get_face_points_from_db(sqcur, image[0])
         image_data = get_image_from_db(sqcur, image[0])
         buf_image_data = BytesIO(image_data)
-        unique_images_annotated.append(
-            draw_facepoints_on_image(buf_image_data, face_points)
-        )
+        unique_images_annotated.append(draw_facepoints_on_image(buf_image_data, face_points))
         # draw = ImageDraw.Draw(image_with_points)
         # draw.text((0,0),"fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b", (0,0,0))
         # image_with_points.show()
