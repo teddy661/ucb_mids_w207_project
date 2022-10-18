@@ -62,46 +62,78 @@ def get_images_missing_data(sqcur, col_root_name):
                 image_data
             WHERE
                 {0}_y IS NULL);
-                """.format(col_root_name)
+                """.format(
+        col_root_name
+    )
     sqcur.execute(query)
     rows = sqcur.fetchall()
     return rows
 
 
 def get_all_images(sqcur):
-    sqcur.execute("""
+    sqcur.execute(
+        """
     SELECT  
-        rowid,png_hash,png_image
+        rowid,
+        png_hash,
+        png_image
     FROM
         image_data
-    """)
+    """
+    )
     rows = sqcur.fetchall()
     return rows
 
 
 def get_duplicate_images_with_count(sqcur):
-    sqcur.execute("""
+    sqcur.execute(
+        """
     SELECT
         COUNT(png_hash),
-        png_hash
+        png_hash,
+        png_image
     FROM
-        dup_images
+        image_data
     GROUP BY
-        png_hash
+        png_hash,
+        png_image
+    HAVING
+        COUNT(png_hash)>1
     ORDER BY
-        COUNT(png_hash) ASC;
-    """)
+        COUNT(png_hash) DESC;
+    """
+    )
+    rows = sqcur.fetchall()
+    return rows
+
+
+def get_rowid_from_hash(sqcur, png_hash):
+    sqcur.execute(
+        """
+    SELECT
+        rowid
+    FROM
+        image_data
+    WHERE
+        png_hash = ?
+    ORDER BY 
+        rowid ASC;
+    """,
+        (png_hash,),
+    )
     rows = sqcur.fetchall()
     return rows
 
 
 def get_data_column_names(sqcur):
-    sqcur.execute("""
+    sqcur.execute(
+        """
     SELECT
         name
     FROM
         PRAGMA_TABLE_INFO ('image_data');
-    """)
+    """
+    )
     rows = sqcur.fetchall()
     valid = re.compile("\w+(_x|_y)$")
     point_cols = []
@@ -206,22 +238,34 @@ def draw_facepoints_on_image(image_data, face_points):
         draw.point(dataclasses.astuple(face_points.right_eye_center), fill="orange")
 
     if face_points.right_eye_inner_corner.x is not None:
-        draw.point(dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange")
+        draw.point(
+            dataclasses.astuple(face_points.right_eye_inner_corner), fill="orange"
+        )
 
     if face_points.right_eye_outer_corner.x is not None:
-        draw.point(dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange")
+        draw.point(
+            dataclasses.astuple(face_points.right_eye_outer_corner), fill="orange"
+        )
 
     if face_points.left_eyebrow_inner_end.x is not None:
-        draw.point(dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green")
+        draw.point(
+            dataclasses.astuple(face_points.left_eyebrow_inner_end), fill="green"
+        )
 
     if face_points.left_eyebrow_outer_end.x is not None:
-        draw.point(dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green")
+        draw.point(
+            dataclasses.astuple(face_points.left_eyebrow_outer_end), fill="green"
+        )
 
     if face_points.right_eyebrow_inner_end.x is not None:
-        draw.point(dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue")
+        draw.point(
+            dataclasses.astuple(face_points.right_eyebrow_inner_end), fill="blue"
+        )
 
     if face_points.right_eyebrow_outer_end.x is not None:
-        draw.point(dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue")
+        draw.point(
+            dataclasses.astuple(face_points.right_eyebrow_outer_end), fill="blue"
+        )
 
     if face_points.nose_tip.x is not None:
         draw.point(dataclasses.astuple(face_points.nose_tip), fill="yellow")
@@ -233,10 +277,14 @@ def draw_facepoints_on_image(image_data, face_points):
         draw.point(dataclasses.astuple(face_points.mouth_right_corner), fill="magenta")
 
     if face_points.mouth_center_top_lip.x is not None:
-        draw.point(dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta")
+        draw.point(
+            dataclasses.astuple(face_points.mouth_center_top_lip), fill="magenta"
+        )
 
     if face_points.mouth_center_bottom_lip.x is not None:
-        draw.point(dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta")
+        draw.point(
+            dataclasses.astuple(face_points.mouth_center_bottom_lip), fill="magenta"
+        )
 
     return im
 
@@ -250,7 +298,9 @@ def main():
     :return:
     :rtype:
     """
-    parser = argparse.ArgumentParser(description="Utilities For Working with Face Images",)
+    parser = argparse.ArgumentParser(
+        description="Utilities For Working with Face Images",
+    )
     parser.add_argument(
         "-d",
         dest="db_file",
@@ -286,7 +336,18 @@ def main():
     print("")
     duplicate_images = get_duplicate_images_with_count(sqcur)
     for image in duplicate_images:
-        print(f"Count: {image[0]} Hash (first 10 only): {image[1][:10]}")
+        print(f"Count: {image[0]} Hash (first 10 only): {image[1]}")
+        rowids = get_rowid_from_hash(sqcur, image[1])
+        tgt = Image.new("RGB", (96 * len(rowids), 96))
+        x = 0
+        for rowid in rowids:
+            face_points = get_face_points_from_db(sqcur, rowid[0])
+            tgt.paste(
+                draw_facepoints_on_image(BytesIO(image[2]), face_points), (x * 96, 0)
+            )
+            x = x + 1
+        print(f"Saving {image[1]}_dups.png")
+        tgt.save(f"{image[1]}_dups.png", format="png", optimize=True)
 
     ##### Render composite with all images and facepoints
     print("")
@@ -298,10 +359,9 @@ def main():
         face_points = get_face_points_from_db(sqcur, image[0])
         image_data = get_image_from_db(sqcur, image[0])
         buf_image_data = BytesIO(image_data)
-        unique_images_annotated.append(draw_facepoints_on_image(buf_image_data, face_points))
-        # draw = ImageDraw.Draw(image_with_points)
-        # draw.text((0,0),"fe5952d06f166324b687e4729aead63b3322919f25daa4510571c0ff25dc6b8b7cdebf9cff5f22968014e2730db59bd364fbe5a96757d4232e6e5a5dc091468b", (0,0,0))
-        # image_with_points.show()
+        unique_images_annotated.append(
+            draw_facepoints_on_image(buf_image_data, face_points)
+        )
     # factors of 7049
     # 1 | 7 | 19 | 53 | 133 | 371 | 1007 | 7049
     dst = Image.new("RGB", (96 * 19, 96 * 371))
@@ -314,8 +374,7 @@ def main():
 
     print("Save composite image")
     dst.save("composite_image.png", format="png", optimize=True)
-    print("Display composite image")
-    dst.show()
+
     sqcon.close()
 
 
