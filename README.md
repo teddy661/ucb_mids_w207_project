@@ -6,24 +6,26 @@ Expected file structure:
 
 ```{bash}
 .
-|-- python scripts
+|-- knn
 |-- data
 |   |-- *.csv
 ├── db
 |   |-- *.db
 └── README.md
-
 ```
 
-Only do one of these
-first time creating the database. Pass in `-d path/to/data` to specify the data location. Default is `./data`.
+## First time creating the database
 
-`python create_db.py`
+- Make sure all csv files are in the data directory.
+- cd to the root directory of the project, then run:
+  > `python db/create_db.py`
 
-alternatively if you already created the database, but you want to now delete it and recreate it add the -f flag
+## If you already created the database
 
-`python create_db.py -f`
+- you want to now delete it and recreate it, then add the -f flag
+  > `python db/create_db.py -f`
 
-Check that the utility tools work. Pass in `-d path/to/testing.db` to specify the database location. Default is `./db/testing.db`.
+## Check that the EDA tools work
 
-`python image_utils.py`
+- cd to the root directory of the project, then run:
+  > `python image_utils.py`

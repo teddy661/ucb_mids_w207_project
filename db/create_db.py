@@ -78,19 +78,11 @@ def main():
         dest="enable_overwrite",
         action="store_true",
     )
-    parser.add_argument(
-        "-d",
-        dest="root_directory",
-        type=str,
-        default="..",
-        metavar="character_string",
-        help="path to database",
-    )
 
     args = parser.parse_args()
     prog_name = parser.prog
 
-    ROOT_DIR = Path(args.root_directory)
+    ROOT_DIR = (Path(__file__).parent.parent).resolve()
     DATA_DIR = ROOT_DIR.joinpath("data")
     DB_DIR = ROOT_DIR.joinpath("db")
     TEST_DATA = DATA_DIR.joinpath("test.csv")
