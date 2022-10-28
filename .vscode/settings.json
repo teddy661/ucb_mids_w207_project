@@ -1,6 +1,4 @@
 {
   "editor.tabSize": 4,
-  "python.formatting.yapfArgs": [
-    "--style={based_on_style: black, indent_width: 4}"
-  ]
+  "python.formatting.provider": "black"
 }
