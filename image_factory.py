@@ -1,24 +1,14 @@
-import argparse
-import sqlite3
 from io import BytesIO
-from pathlib import Path
 from PIL import Image
 import os
 
-from db.db_utils import *
+from db.db_access import *
+from db.create_db import get_paths
 
 
 def main():
-
-    check_file = (Path(__file__).parent / "db/training.db").resolve()
-    if check_file.is_file():
-        db = check_file.resolve()
-    else:
-        print("Database didn't exist! Try again")
-        exit()
-
-    sqcon = sqlite3.connect(db)
-    sqcur = sqcon.cursor()
+    TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB = get_paths()
+    sqcon, sqcur = get_db_and_cursor(TRAIN_DB)
 
     #### Missing features
     data_cols = get_data_column_names(sqcur)
