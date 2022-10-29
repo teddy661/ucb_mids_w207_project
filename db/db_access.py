@@ -1,6 +1,26 @@
 import re
+import numpy as np
+import sqlite3
+from pathlib import Path
+import PIL.Image as Image
+
+from db.image_loader import create_image_from_pixels
 from facedata import FaceData
 from facedata import Point
+
+
+def get_db_and_cursor(db_path: Path):
+
+    if db_path.is_file():
+        db = db_path.resolve()
+    else:
+        print("Database didn't exist! Try again")
+        exit()
+
+    sqcon = sqlite3.connect(db)
+    sqcur = sqcon.cursor()
+
+    return sqcon, sqcur
 
 
 def get_image_from_db(sqcur, rowid):
@@ -75,6 +95,74 @@ def get_all_images(sqcur):
     )
     rows = sqcur.fetchall()
     return rows
+
+
+def get_training_data_as_numpy(sqcur):
+    sqcur.execute(
+        """
+    SELECT  
+        image_raw_pixels,
+        left_eye_center_x,
+        left_eye_center_y,
+        right_eye_center_x,
+        right_eye_center_y,
+        left_eye_inner_corner_x,
+        left_eye_inner_corner_y,
+        left_eye_outer_corner_x,
+        left_eye_outer_corner_y,
+        right_eye_inner_corner_x,
+        right_eye_inner_corner_y,
+        right_eye_outer_corner_x,
+        right_eye_outer_corner_y,
+        left_eyebrow_inner_end_x,
+        left_eyebrow_inner_end_y,
+        left_eyebrow_outer_end_x,
+        left_eyebrow_outer_end_y,
+        right_eyebrow_inner_end_x,
+        right_eyebrow_inner_end_y,
+        right_eyebrow_outer_end_x,
+        right_eyebrow_outer_end_y,
+        nose_tip_x,
+        nose_tip_y,
+        mouth_left_corner_x,
+        mouth_left_corner_y,
+        mouth_right_corner_x,
+        mouth_right_corner_y,
+        mouth_center_top_lip_x,
+        mouth_center_top_lip_y,
+        mouth_center_bottom_lip_x,
+        mouth_center_bottom_lip_y
+    FROM
+        image_data
+    """
+    )
+    rows = sqcur.fetchall()
+
+    X = np.stack([np.asarray(create_image_from_pixels(row[0])) for row in rows])
+
+    y = np.asarray([row[1:] for row in rows])
+
+    print(f"Image array shape: {X.shape}, Label array shape: {y.shape}")
+
+    return X, y
+
+
+def get_test_data_as_numpy(sqcur):
+    sqcur.execute(
+        """
+    SELECT  
+        image_raw_pixels
+    FROM
+        image_data
+    """
+    )
+    rows = sqcur.fetchall()
+
+    X = np.stack([np.asarray(create_image_from_pixels(row[0])) for row in rows])
+
+    print(f"Image array shape: {X.shape}")
+
+    return X
 
 
 def get_duplicate_images_with_count(sqcur):
