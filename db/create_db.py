@@ -63,40 +63,33 @@ def create_duplicate_image_view(sqcur):
     )
 
 
-def main():
-    """
-    Generate sqlite database from a pandas table.
-    :return:
-    :rtype:
-    """
-    parser = argparse.ArgumentParser(
-        description="Create an sqlite database from csv files and generate png files from raw image pixels "
-    )
-    parser.add_argument(
-        "-f",
-        help="overwrite existing database",
-        dest="enable_overwrite",
-        action="store_true",
-    )
-    parser.add_argument(
-        "-d",
-        dest="root_directory",
-        type=str,
-        default="..",
-        metavar="character_string",
-        help="path to database",
-    )
+def create_db(data_path, db_path):
+    df = pd.read_csv(data_path, encoding="utf8")
+    df.rename(columns={"Image": "image_raw_pixels"}, inplace=True)
+    df["png_image"] = df["image_raw_pixels"].apply(create_image)
+    df["png_hash"] = df["png_image"].apply(calc_hash)
 
-    args = parser.parse_args()
-    prog_name = parser.prog
+    sqcon = sqlite3.connect(db_path)
+    sqcur = sqcon.cursor()
 
-    ROOT_DIR = Path(args.root_directory)
-    DATA_DIR = ROOT_DIR.joinpath("data")
-    DB_DIR = ROOT_DIR.joinpath("db")
-    TEST_DATA = DATA_DIR.joinpath("test.csv")
-    TRAIN_DATA = DATA_DIR.joinpath("training.csv")
-    TRAIN_DB = DB_DIR.joinpath("training.db")
+    sqcur.execute("""PRAGMA page_size=32768""")
+    sqcur.execute("""PRAGMA temp_store=2""")
+    sqcur.execute("""PRAGMA locking_mode=EXCLUSIVE""")
+    sqcur.execute("""PRAGMA cache_size=-65536""")
+    sqcur.execute("""PRAGMA synchronous = 0""")
+    df.to_sql("image_data", sqcon, if_exists="replace", index=True)
+    create_duplicate_image_view(sqcon)
+    sqcur.execute(
+        """CREATE INDEX IF NOT EXISTS idx_image_hash on image_data (png_hash)"""
+    )
+    sqcur.execute("""ANALYZE""")
+    sqcon.commit()
+    sqcon.close()
 
+
+def verify_paths(
+    ROOT_DIR, TEST_DATA, TRAIN_DATA, TRAIN_DB, TEST_DB, override: bool = False
+):
     if not ROOT_DIR.is_dir():
         print(
             "Terminating, root directory does not exist or is not a directory {0}".format(
@@ -121,44 +114,63 @@ def main():
         )
         exit()
 
-    if not DB_DIR.exists():
-        os.mkdir(DB_DIR)
+    verify_db(TRAIN_DB, override)
+    verify_db(TEST_DB, override)
 
-    if args.enable_overwrite:
+
+def verify_db(db_path: Path, override: bool = False):
+
+    if override:
         try:
-            os.remove(TRAIN_DB)
+            os.remove(db_path)
         except OSError:
             pass
-
-    elif TRAIN_DB.is_file() and not args.enable_overwrite:
+    elif db_path.is_file() and not override:
         print(
             "Database exists, will not overwrite. Use -f flag to force overwrite {0}".format(
-                TRAIN_DB
+                db_path
             )
         )
         exit()
 
-    df = pd.read_csv(TRAIN_DATA, encoding="utf8")
-    df.rename(columns={"Image": "image_raw_pixels"}, inplace=True)
-    df["png_image"] = df["image_raw_pixels"].apply(create_image)
-    df["png_hash"] = df["png_image"].apply(calc_hash)
 
-    sqcon = sqlite3.connect(TRAIN_DB)
-    sqcur = sqcon.cursor()
-
-    sqcur.execute("""PRAGMA page_size=32768""")
-    sqcur.execute("""PRAGMA temp_store=2""")
-    sqcur.execute("""PRAGMA locking_mode=EXCLUSIVE""")
-    sqcur.execute("""PRAGMA cache_size=-65536""")
-    sqcur.execute("""PRAGMA synchronous = 0""")
-    df.to_sql("image_data", sqcon, if_exists="replace", index=True)
-    create_duplicate_image_view(sqcon)
-    sqcur.execute(
-        """CREATE INDEX IF NOT EXISTS idx_image_hash on image_data (png_hash)"""
+def main():
+    """
+    Generate sqlite database from a pandas table.
+    :return:
+    :rtype:
+    """
+    parser = argparse.ArgumentParser(
+        description="Create an sqlite database from csv files and generate png files from raw image pixels "
     )
-    sqcur.execute("""ANALYZE""")
-    sqcon.commit()
-    sqcon.close()
+    parser.add_argument(
+        "-f",
+        help="overwrite existing database",
+        dest="enable_overwrite",
+        action="store_true",
+    )
+
+    args = parser.parse_args()
+
+    ROOT_DIR = (Path(__file__).parent.parent).resolve()
+
+    DATA_DIR = ROOT_DIR.joinpath("data")
+    TEST_DATA = DATA_DIR.joinpath("test.csv")
+    TRAIN_DATA = DATA_DIR.joinpath("training.csv")
+
+    DB_DIR = ROOT_DIR.joinpath("db")
+    if not DB_DIR.exists():
+        os.mkdir(DB_DIR)
+
+    TRAIN_DB = DB_DIR.joinpath("training.db")
+    TEST_DB = DB_DIR.joinpath("test.db")
+
+    verify_paths(
+        ROOT_DIR, TEST_DATA, TRAIN_DATA, TRAIN_DB, TEST_DB, args.enable_overwrite
+    )
+
+    create_db(TRAIN_DATA, TRAIN_DB)
+    create_db(TEST_DATA, TEST_DB)
 
 
 if __name__ == "__main__":

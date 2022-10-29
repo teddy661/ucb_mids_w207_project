@@ -1,2 +1,2 @@
 !.gitignore
-training.db
+*.db
