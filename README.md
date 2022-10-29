@@ -1,6 +1,8 @@
 # ucb_mids_w207_project
 
-W207 Final Project
+W207 Final Project: Facepoint Detection
+
+Kaggle Link: <https://www.kaggle.com/c/facial-keypoints-detection>
 
 Expected file structure:
 

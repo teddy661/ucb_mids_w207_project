@@ -2,18 +2,21 @@ from io import BytesIO
 from PIL import Image
 import os
 
-from db.db_access import *
+import db.db_access as dba
 from db.create_db import get_paths
+from facedata import FaceData
 
 
 def main():
     TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB = get_paths()
-    sqcon, sqcur = get_db_and_cursor(TRAIN_DB)
+    sqcon, sqcur = dba.get_db_and_cursor(TRAIN_DB)
 
     #### Missing features
-    data_cols = get_data_column_names(sqcur)
+    data_cols = dba.get_data_column_names(sqcur)
     for col in data_cols:
-        print(f"Feature: {col:<25} Missing: {len(get_images_missing_data(sqcur, col))}")
+        print(
+            f"Feature: {col:<25} Missing: {len(dba.get_images_missing_data(sqcur, col))}"
+        )
 
     ##### Counts up duplicate pictures
     print("")
@@ -28,14 +31,14 @@ def main():
         except Exception as e:
             print("Failed to delete %s. Reason: %s" % (file_path, e))
 
-    duplicate_images = get_duplicate_images_with_count(sqcur)
+    duplicate_images = dba.get_duplicate_images_with_count(sqcur)
     for image in duplicate_images:
         print(f"Count: {image[0]} Hash (first 10 only): {image[1]}")
-        rowids = get_rowid_from_hash(sqcur, image[1])
+        rowids = dba.get_rowid_from_hash(sqcur, image[1])
         tgt = Image.new("RGB", (96 * len(rowids), 96))
         x = 0
         for rowid in rowids:
-            face_points = get_face_points_from_db(sqcur, rowid[0])
+            face_points = dba.get_face_points_from_db(sqcur, rowid[0])
             im = Image.open(BytesIO(image[2])).convert("RGB")
             face_points.draw_facepoints_on_image(im)
             tgt.paste(im, (x * 96, 0))
@@ -48,11 +51,11 @@ def main():
     print("")
     print("")
     print("Annotating All Images")
-    unique_images = get_all_images(sqcur)
+    unique_images = dba.get_all_images(sqcur)
     unique_images_annotated = []
     for image in unique_images:
-        face_points: FaceData = get_face_points_from_db(sqcur, image[0])
-        image_data = get_image_from_db(sqcur, image[0])
+        face_points: FaceData = dba.get_face_points_from_db(sqcur, image[0])
+        image_data = dba.get_image_from_db(sqcur, image[0])
         buf_image_data = Image.open(BytesIO(image_data)).convert("RGB")
         face_points.draw_facepoints_on_image(buf_image_data)
 

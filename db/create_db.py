@@ -25,27 +25,27 @@ def get_paths() -> tuple:
     return TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB
 
 
-def verify_paths(ROOT_DIR, TRAIN_DATA, TEST_DATA):
-    if not ROOT_DIR.is_dir():
+def verify_paths(root_dir, train_data, test_data):
+    if not root_dir.is_dir():
         print(
             "Terminating, root directory does not exist or is not a directory {0}".format(
-                ROOT_DIR
+                root_dir
             )
         )
         exit()
 
-    if not TRAIN_DATA.is_file():
+    if not train_data.is_file():
         print(
             "Terminating, Training data csv file doe not exist or is not a file {0}".format(
-                TRAIN_DATA
+                train_data
             )
         )
         exit()
 
-    if not TEST_DATA.is_file():
+    if not test_data.is_file():
         print(
             "Terminating, Test data csv file doe not exist or is not a file {0}".format(
-                TEST_DATA
+                test_data
             )
         )
         exit()
@@ -55,7 +55,6 @@ def display_image(png_string):
     # im = Image.open(io.BytesIO(df.iloc[0]['png_image']))
     im = Image.open(io.BytesIO(png_string))
     im.show()
-    return
 
 
 def create_duplicate_image_view(sqcur):

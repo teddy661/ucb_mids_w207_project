@@ -4,6 +4,8 @@ import numpy as np
 from PIL import Image
 from hashlib import blake2b
 
+IMAGE_SIZE = (96, 96)
+
 
 def load_image_data(data_path) -> pd.DataFrame:
     """
@@ -19,10 +21,9 @@ def load_image_data(data_path) -> pd.DataFrame:
 
 
 def create_image_from_pixels(pixels) -> Image.Image:
-    image_size = (96, 96)
-    temp_image = Image.new("L", image_size)
+    temp_image = Image.new("L", IMAGE_SIZE)
     temp_image.putdata([int(x) for x in pixels.split()])
-    
+
     return temp_image
 
 

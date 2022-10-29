@@ -139,7 +139,6 @@ def get_training_data_as_numpy(sqcur):
     rows = sqcur.fetchall()
 
     X = np.stack([np.asarray(create_image_from_pixels(row[0])) for row in rows])
-
     y = np.asarray([row[1:] for row in rows])
 
     print(f"Image array shape: {X.shape}, Label array shape: {y.shape}")
@@ -223,7 +222,7 @@ def get_data_column_names(sqcur):
     return sorted(set(point_cols))
 
 
-def get_face_points_from_db(sqcur, rowid) -> FaceData:
+def get_face_points_from_db(sqcur, rowid) -> FaceData / None:
     """
     :param sqcur:
     :type sqcur:
