@@ -4,13 +4,13 @@ W207 Final Project
 
 Expected file structure:
 
-```{bash}
+```path
 .
-|-- knn
 |-- data
 |   |-- *.csv
 ├── db
 |   |-- *.db
+|-- knn
 └── README.md
 ```
 
