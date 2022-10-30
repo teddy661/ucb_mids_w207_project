@@ -8,7 +8,7 @@
       "name": "data_loader",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/knn/data_loader.py",
+      "program": "${workspaceFolder}/classifier/data_loader.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceRoot}",
       "justMyCode": true,
@@ -21,7 +21,8 @@
       "program": "${workspaceFolder}/db/create_db.py",
       "console": "integratedTerminal",
       "args": ["-f"],
-      "justMyCode": true
+      "justMyCode": true,
+      "env": { "PYTHONPATH": "${workspaceRoot}" }
     }
   ]
 }

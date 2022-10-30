@@ -5,11 +5,11 @@ from pathlib import Path
 import PIL.Image as Image
 
 from db.image_loader import create_image_from_pixels
-from facedata import FaceData
-from facedata import Point
+from face_data import FaceData
+from face_data import Point
 
 
-def get_db_and_cursor(db_path: Path):
+def get_con_and_cursor(db_path: Path):
 
     if db_path.is_file():
         db = db_path.resolve()
@@ -21,6 +21,14 @@ def get_db_and_cursor(db_path: Path):
     sqcur = sqcon.cursor()
 
     return sqcon, sqcur
+
+
+def dispose(sqcon: sqlite3.Connection, sqcur: sqlite3.Cursor):
+    """Dispose the connection and cursor"""
+    sqcur.close()
+    sqcon.close()
+    del sqcur
+    del sqcon
 
 
 def get_image_from_db(sqcur, rowid):
@@ -222,7 +230,7 @@ def get_data_column_names(sqcur):
     return sorted(set(point_cols))
 
 
-def get_face_points_from_db(sqcur, rowid) -> FaceData / None:
+def get_face_points_from_db(sqcur, rowid) -> FaceData or None:
     """
     :param sqcur:
     :type sqcur:

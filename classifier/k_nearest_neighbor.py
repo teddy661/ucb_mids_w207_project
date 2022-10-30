@@ -27,7 +27,7 @@ class KNearestNeighbor(object):
         self.X_train = X
         self.y_train = y
 
-    def predict(self, X: np.ndarray, k=1) -> None:
+    def predict(self, X: np.ndarray, k=1) -> np.ndarray:
         """
         Predict labels for test data using this classifier.
 
@@ -42,7 +42,7 @@ class KNearestNeighbor(object):
         """
 
         dists = self.compute_distances(X)
-        return self.predict_labels(dists, k=k)
+        return self.predict_locations(dists, k=k)
 
     def compute_distances(self, X: np.ndarray) -> np.ndarray:
         """
@@ -58,12 +58,7 @@ class KNearestNeighbor(object):
           point.
         """
 
-        num_test = X.shape[0]
-        num_train = self.X_train.shape[0]
-        dists = np.zeros((num_test, num_train))
-
-        # (x - y)^2 = x^2 + y^2 - 2xy
-
+        # (x1 - x2)^2 = x1^2 + x2^2 - x1x2
         squared_sum = -2 * (X @ self.X_train.T)
         squared_sum += np.sum(np.power(X, 2), axis=1, keepdims=True)
         squared_sum += np.sum(np.power(self.X_train, 2), axis=1, keepdims=True).T
@@ -72,7 +67,7 @@ class KNearestNeighbor(object):
 
         return dists
 
-    def predict_labels(self, dists, k=1):
+    def predict_locations(self, dists, k=1):
         """
         Given a matrix of distances between test points and training points,
         predict a label for each test point.
@@ -86,12 +81,12 @@ class KNearestNeighbor(object):
           test data, where y[i] is the predicted label for the test point X[i].
         """
         num_test = dists.shape[0]
-        y_pred = np.zeros(num_test)
+        y_pred = np.zeros([num_test, self.y_train.shape[1]])
         for i in range(num_test):
 
             # A list of length k storing the labels of the k nearest neighbors to the ith test point.
             closest_y = []
             closest_y = self.y_train[np.argpartition(dists[i, :], k)[:k]]
-            y_pred[i] = np.bincount(closest_y).argmax()
+            y_pred[i] = np.average(closest_y, axis=0)
 
         return y_pred
