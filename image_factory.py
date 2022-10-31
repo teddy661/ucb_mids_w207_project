@@ -4,12 +4,12 @@ import os
 
 import db.db_access as dba
 from db.create_db import get_paths
-from facedata import FaceData
+from face_data import FaceData
 
 
 def main():
     TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB = get_paths()
-    sqcon, sqcur = dba.get_db_and_cursor(TRAIN_DB)
+    sqcon, sqcur = dba.get_con_and_cursor(TRAIN_DB)
 
     #### Missing features
     data_cols = dba.get_data_column_names(sqcur)
@@ -73,7 +73,7 @@ def main():
     print("Save composite image")
     dst.save("composite_image.png", format="png", optimize=True)
 
-    sqcon.close()
+    dba.dispose(sqcon, sqcur)
 
 
 if __name__ == "__main__":
