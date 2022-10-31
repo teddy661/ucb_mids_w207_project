@@ -1,11 +1,12 @@
-from json import load
 import pandas as pd
 import numpy as np
 
 from db.create_db import get_paths
 import db.db_access as dba
 
-COLOR_SCALE = 255.0
+COLOR_SCALE = 1.0
+# this turned out not necessary, and having decimals would mess up the calculations later
+# as the precision cause 0 to be calculated as very small negative numbers sometimes
 
 
 def load_data(

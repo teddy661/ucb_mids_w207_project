@@ -1,4 +1,3 @@
-from builtins import range
 from builtins import object
 import numpy as np
 
@@ -58,6 +57,10 @@ class KNearestNeighbor(object):
           point.
         """
 
+        num_test = X.shape[0]
+        num_train = self.X_train.shape[0]
+        dists = np.zeros((num_test, num_train))
+
         # (x1 - x2)^2 = x1^2 + x2^2 - x1x2
         squared_sum = -2 * (X @ self.X_train.T)
         squared_sum += np.sum(np.power(X, 2), axis=1, keepdims=True)
@@ -82,10 +85,10 @@ class KNearestNeighbor(object):
         """
         num_test = dists.shape[0]
         y_pred = np.zeros([num_test, self.y_train.shape[1]])
-        for i in range(num_test):
+        for i in np.arange(num_test):
 
-            # A list of length k storing the labels of the k nearest neighbors to the ith test point.
             closest_y = []
+            # A list of length k storing the labels of the k nearest neighbors to the ith test point.
             closest_y = self.y_train[np.argpartition(dists[i, :], k)[:k]]
             y_pred[i] = np.average(closest_y, axis=0)
 
