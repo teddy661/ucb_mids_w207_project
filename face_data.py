@@ -1,4 +1,5 @@
 import dataclasses
+from io import BytesIO
 from PIL import Image, ImageDraw
 
 
@@ -33,12 +34,13 @@ class FaceData:
     mouth_center_top_lip: Point
     mouth_center_bottom_lip: Point
 
-    def draw_facepoints_on_image(self, im: Image) -> None:
+    def draw_facepoints_on_image(self, image_data) -> Image.Image:
         """
-        Draw all the facepoints on the image.
+        Converts the image data into image, and draw all the facepoints on the image.
         """
 
-        draw = ImageDraw.Draw(im)
+        image = Image.open(BytesIO(image_data)).convert("RGB")
+        draw = ImageDraw.Draw(image)
         if self.left_eye_center.x is not None:
             draw.ellipse(self.left_eye_center.get_drawing_circle(), fill="orange")
 
@@ -93,3 +95,5 @@ class FaceData:
             draw.ellipse(
                 self.mouth_center_bottom_lip.get_drawing_circle(), fill="magenta"
             )
+
+        return image

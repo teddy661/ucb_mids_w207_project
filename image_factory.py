@@ -36,20 +36,19 @@ def main():
 
     ##### Counts up duplicate pictures
     duplicate_images = dba.get_duplicate_images_with_count(sqcur)
-    for image in duplicate_images:
-        rows = dba.get_rows_from_hash(sqcur, image[1])
+    for image_row in duplicate_images:
+        rows = dba.get_rows_from_hash(sqcur, image_row[1])
         tgt = Image.new("RGB", (96 * len(rows), 96))
         x = 0
         for row in rows:
             face_points = dba.get_face_points_from_db(sqcur, row[0])
-            im = Image.open(BytesIO(image[2])).convert("RGB")
-            face_points.draw_facepoints_on_image(im)
+            im = face_points.draw_facepoints_on_image(image_row[2])
             tgt.paste(im, (x * 96, 0))
             x = x + 1
 
-        print(f"Saving {image[1]}_dups.png")
+        print(f"Saving {image_row[1]}_dups.png")
         if len(rows) > 2:  # only saving images with more than 2 duplicates
-            tgt.save(f"{folder}{image[1]}_dups.png", format="png", optimize=True)
+            tgt.save(f"{folder}{image_row[1]}_dups.png", format="png", optimize=True)
 
     ##### Render composite with all images and facepoints
     print("")
@@ -57,13 +56,10 @@ def main():
     print("Annotating All Images...")
     unique_images = dba.get_all_images(sqcur)
     unique_images_annotated = []
-    for image in unique_images:
-        face_points: FaceData = dba.get_face_points_from_db(sqcur, image[0])
-        image_data = dba.get_image_from_db(sqcur, image[0])
-        buf_image_data = Image.open(BytesIO(image_data)).convert("RGB")
-        face_points.draw_facepoints_on_image(buf_image_data)
-
-        unique_images_annotated.append(buf_image_data)
+    for image_row in unique_images:
+        face_points = dba.get_face_points_from_db(sqcur, image_row[0])
+        im = face_points.draw_facepoints_on_image(image_row[2])
+        unique_images_annotated.append(im)
 
     num_rows = ceil(IMAGE_LIMT / IMAGE_PER_ROW)
     dst = Image.new("RGB", (96 * IMAGE_PER_ROW, 96 * num_rows))
