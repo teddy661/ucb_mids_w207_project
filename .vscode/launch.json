@@ -15,6 +15,16 @@
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     },
     {
+      "name": "image_factory",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/image_factory.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceRoot}",
+      "justMyCode": true,
+      "env": { "PYTHONPATH": "${workspaceRoot}" }
+    },
+    {
       "name": "create db",
       "type": "python",
       "request": "launch",

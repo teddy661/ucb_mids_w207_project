@@ -40,13 +40,13 @@ class FaceData:
 
         draw = ImageDraw.Draw(im)
         if self.left_eye_center.x is not None:
-            draw.ellipse(self.left_eye_center.get_drawing_circle(), fill="red")
+            draw.ellipse(self.left_eye_center.get_drawing_circle(), fill="orange")
 
         if self.left_eye_inner_corner.x is not None:
-            draw.ellipse(self.left_eye_inner_corner.get_drawing_circle(), fill="red")
+            draw.ellipse(self.left_eye_inner_corner.get_drawing_circle(), fill="orange")
 
         if self.left_eye_outer_corner.x is not None:
-            draw.ellipse(self.left_eye_outer_corner.get_drawing_circle(), fill="red")
+            draw.ellipse(self.left_eye_outer_corner.get_drawing_circle(), fill="orange")
 
         if self.right_eye_center.x is not None:
             draw.ellipse(self.right_eye_center.get_drawing_circle(), fill="orange")
@@ -68,10 +68,14 @@ class FaceData:
             draw.ellipse(self.left_eyebrow_outer_end.get_drawing_circle(), fill="green")
 
         if self.right_eyebrow_inner_end.x is not None:
-            draw.ellipse(self.right_eyebrow_inner_end.get_drawing_circle(), fill="blue")
+            draw.ellipse(
+                self.right_eyebrow_inner_end.get_drawing_circle(), fill="green"
+            )
 
         if self.right_eyebrow_outer_end.x is not None:
-            draw.ellipse(self.right_eyebrow_outer_end.get_drawing_circle(), fill="blue")
+            draw.ellipse(
+                self.right_eyebrow_outer_end.get_drawing_circle(), fill="green"
+            )
 
         if self.nose_tip.x is not None:
             draw.ellipse(self.nose_tip.get_drawing_circle(), fill="yellow")

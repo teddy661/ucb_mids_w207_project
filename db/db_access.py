@@ -196,7 +196,7 @@ def get_duplicate_images_with_count(sqcur):
     return rows
 
 
-def get_rowid_from_hash(sqcur, png_hash):
+def get_rows_from_hash(sqcur, png_hash):
     sqcur.execute(
         """
     SELECT

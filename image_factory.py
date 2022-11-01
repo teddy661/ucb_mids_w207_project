@@ -1,10 +1,14 @@
 from io import BytesIO
+from math import ceil
 from PIL import Image
 import os
 
 import db.db_access as dba
 from db.create_db import get_paths
 from face_data import FaceData
+
+IMAGE_LIMT = 100
+IMAGE_PER_ROW = 10
 
 
 def main():
@@ -18,7 +22,6 @@ def main():
             f"Feature: {col:<25} Missing: {len(dba.get_images_missing_data(sqcur, col))}"
         )
 
-    ##### Counts up duplicate pictures
     print("")
     print("")
     # delete images that already exist
@@ -31,26 +34,27 @@ def main():
         except Exception as e:
             print("Failed to delete %s. Reason: %s" % (file_path, e))
 
+    ##### Counts up duplicate pictures
     duplicate_images = dba.get_duplicate_images_with_count(sqcur)
     for image in duplicate_images:
-        print(f"Count: {image[0]} Hash (first 10 only): {image[1]}")
-        rowids = dba.get_rowid_from_hash(sqcur, image[1])
-        tgt = Image.new("RGB", (96 * len(rowids), 96))
+        rows = dba.get_rows_from_hash(sqcur, image[1])
+        tgt = Image.new("RGB", (96 * len(rows), 96))
         x = 0
-        for rowid in rowids:
-            face_points = dba.get_face_points_from_db(sqcur, rowid[0])
+        for row in rows:
+            face_points = dba.get_face_points_from_db(sqcur, row[0])
             im = Image.open(BytesIO(image[2])).convert("RGB")
             face_points.draw_facepoints_on_image(im)
             tgt.paste(im, (x * 96, 0))
             x = x + 1
 
         print(f"Saving {image[1]}_dups.png")
-        tgt.save(f"{folder}{image[1]}_dups.png", format="png", optimize=True)
+        if len(rows) > 2:  # only saving images with more than 2 duplicates
+            tgt.save(f"{folder}{image[1]}_dups.png", format="png", optimize=True)
 
     ##### Render composite with all images and facepoints
     print("")
     print("")
-    print("Annotating All Images")
+    print("Annotating All Images...")
     unique_images = dba.get_all_images(sqcur)
     unique_images_annotated = []
     for image in unique_images:
@@ -60,17 +64,17 @@ def main():
         face_points.draw_facepoints_on_image(buf_image_data)
 
         unique_images_annotated.append(buf_image_data)
-    # factors of 7049
-    # 1 | 7 | 19 | 53 | 133 | 371 | 1007 | 7049
-    dst = Image.new("RGB", (96 * 19, 96 * 371))
+
+    num_rows = ceil(IMAGE_LIMT / IMAGE_PER_ROW)
+    dst = Image.new("RGB", (96 * IMAGE_PER_ROW, 96 * num_rows))
     i = 0
-    print("Build composite image")
-    for y in range(371):
-        for x in range(19):
+    print(f"Build composite image for top {IMAGE_LIMT} images...")
+    for x in range(IMAGE_PER_ROW):
+        for y in range(num_rows):
             dst.paste(unique_images_annotated[i], (x * 96, y * 96))
             i = i + 1
 
-    print("Save composite image")
+    print("Save composite image...")
     dst.save("composite_image.png", format="png", optimize=True)
 
     dba.dispose(sqcon, sqcur)
