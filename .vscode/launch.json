@@ -10,8 +10,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/classifier/data_loader.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceRoot}",
       "justMyCode": true,
+      "cwd": "${workspaceRoot}",
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     },
     {
@@ -20,8 +20,8 @@
       "request": "launch",
       "program": "${workspaceFolder}/image_factory.py",
       "console": "integratedTerminal",
-      "cwd": "${workspaceRoot}",
       "justMyCode": true,
+      "cwd": "${workspaceRoot}",
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     },
     {
@@ -32,6 +32,7 @@
       "console": "integratedTerminal",
       "args": ["-f"],
       "justMyCode": true,
+      "cwd": "${workspaceRoot}",
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     }
   ]
