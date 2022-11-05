@@ -1,6 +1,7 @@
-import numpy as np
 import dataclasses
 from io import BytesIO
+
+import numpy as np
 from PIL import Image, ImageDraw
 
 

@@ -1,8 +1,8 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-from db.create_db import get_paths
 import db.db_access as dba
+from db.create_db import get_paths
 
 COLOR_SCALE = 1.0
 # this turned out not necessary, and having decimals would mess up the calculations later

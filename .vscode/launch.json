@@ -11,8 +11,8 @@
       "program": "${workspaceFolder}/classifier/data_loader.py",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceRoot}",
-      "env": { "PYTHONPATH": "${workspaceRoot}" }
+      // we just need to make sure os.getcwd() is the root of the project
+      "env": { "PYTHONPATH": "${workspaceRoot}" } // this is a bug in VSCode, shouldn't need to do this
     },
     {
       "name": "image_factory",
@@ -21,7 +21,6 @@
       "program": "${workspaceFolder}/image_factory.py",
       "console": "integratedTerminal",
       "justMyCode": true,
-      "cwd": "${workspaceRoot}",
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     },
     {
@@ -32,7 +31,6 @@
       "console": "integratedTerminal",
       "args": ["-f"],
       "justMyCode": true,
-      "cwd": "${workspaceRoot}",
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     }
   ]

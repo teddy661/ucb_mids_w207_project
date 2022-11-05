@@ -1,8 +1,9 @@
-import pandas as pd
 import io
-import numpy as np
-from PIL import Image
 from hashlib import blake2b
+
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 IMAGE_SIZE = (96, 96)
 

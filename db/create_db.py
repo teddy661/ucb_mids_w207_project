@@ -1,7 +1,9 @@
 import argparse
-import os, io
+import io
+import os
 import sqlite3
 from pathlib import Path
+
 from PIL import Image
 
 from db.image_loader import load_image_data
