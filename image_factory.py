@@ -1,7 +1,8 @@
+import os
 from io import BytesIO
 from math import ceil
+
 from PIL import Image
-import os
 
 import db.db_access as dba
 from db.create_db import get_paths

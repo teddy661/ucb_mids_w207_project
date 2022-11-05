@@ -1,12 +1,12 @@
 import re
-import numpy as np
 import sqlite3
 from pathlib import Path
+
+import numpy as np
 import PIL.Image as Image
 
 from db.image_loader import create_image_from_pixels
-from face_data import FaceData
-from face_data import Point
+from face_data import FaceData, Point
 
 
 def get_con_and_cursor(db_path: Path):
