@@ -134,7 +134,7 @@ rescale = keras.layers.Rescaling(
 )(input_layer)
 
 conv_1 = keras.layers.Conv2D(
-    filters=32,
+    filters=64,
     kernel_size=(5, 5),
     strides=(1, 1),
     name="conv_1",
@@ -142,130 +142,148 @@ conv_1 = keras.layers.Conv2D(
     activation="relu",
 )(rescale)
 maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_1")(conv_1)
+drop_1 = keras.layers.Dropout(0.1, name="Dropout_1")(maxp_1)
 
 conv_2 = keras.layers.Conv2D(
-    filters=64,
+    filters=128,
     kernel_size=(5, 5),
     strides=(1, 1),
     name="conv_2",
     padding="same",
     activation="relu",
-)(maxp_1)
+)(drop_1)
 maxp_2 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_2")(conv_2)
+drop_2 = keras.layers.Dropout(0.2, name="Dropout_2")(maxp_2)
 
 conv_3 = keras.layers.Conv2D(
-    filters=128,
+    filters=256,
     kernel_size=(5, 5),
     strides=(1, 1),
     name="conv_3",
     padding="same",
     activation="relu",
-)(maxp_2)
+)(drop_2)
 maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_3")(conv_3)
+drop_3 = keras.layers.Dropout(0.3, name="Dropout_3")(maxp_3)
 
-flat_1 = keras.layers.Flatten()(maxp_3)
-dense_1 = keras.layers.Dense(1024, name="fc_1", activation="relu")(flat_1)
+conv_4 = keras.layers.Conv2D(
+    filters=512,
+    kernel_size=(2, 2),
+    strides=(1, 1),
+    name="conv_4",
+    padding="same",
+    activation="relu",
+)(drop_3)
+maxp_4 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_4")(conv_4)
+drop_4 = keras.layers.Dropout(0.4, name="Dropout_4")(maxp_4)
+
+flat_1 = keras.layers.Flatten()(drop_4)
+dense_1 = keras.layers.Dense(1024, name="fc_1", activation="elu")(flat_1)
+norm_1 = keras.layers.BatchNormalization(name="norm_1")(dense_1)
+
+dense_2 = keras.layers.Dense(1024, name="fc_2", activation="elu")(norm_1)
+norm_2 = keras.layers.BatchNormalization(name="norm_2")(dense_2)
 
 left_eye_center_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Center_X"
-)(dense_1)
+)(norm_2)
 left_eye_center_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Center_Y"
-)(dense_1)
+)(norm_2)
 
 right_eye_center_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Center_X"
-)(dense_1)
+)(norm_2)
 right_eye_center_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Center_Y"
-)(dense_1)
+)(norm_2)
 
 left_eye_inner_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Inner_Corner_X"
-)(dense_1)
+)(norm_2)
 left_eye_inner_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Inner_Corner_Y"
-)(dense_1)
+)(norm_2)
 
 left_eye_outer_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Outer_Corner_X"
-)(dense_1)
+)(norm_2)
 left_eye_outer_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Outer_Corner_Y"
-)(dense_1)
+)(norm_2)
 
 right_eye_inner_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Inner_Corner_X"
-)(dense_1)
+)(norm_2)
 right_eye_inner_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Inner_Corner_Y"
-)(dense_1)
+)(norm_2)
 
 right_eye_outer_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Outer_Corner_X"
-)(dense_1)
+)(norm_2)
 right_eye_outer_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Outer_Corner_Y"
-)(dense_1)
+)(norm_2)
 
 left_eyebrow_inner_end_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Inner_End_X"
-)(dense_1)
+)(norm_2)
 left_eyebrow_inner_end_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Inner_End_Y"
-)(dense_1)
+)(norm_2)
 
 left_eyebrow_outer_end_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Outer_End_X"
-)(dense_1)
+)(norm_2)
 left_eyebrow_outer_end_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Outer_End_Y"
-)(dense_1)
+)(norm_2)
 
 right_eyebrow_inner_end_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Inner_End_X"
-)(dense_1)
+)(norm_2)
 right_eyebrow_inner_end_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Inner_End_Y"
-)(dense_1)
+)(norm_2)
 
 right_eyebrow_outer_end_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Outer_End_X"
-)(dense_1)
+)(norm_2)
 right_eyebrow_outer_end_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Outer_End_Y"
-)(dense_1)
+)(norm_2)
 
-nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_X")(dense_1)
-nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_Y")(dense_1)
+nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_X")(norm_2)
+nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_Y")(norm_2)
 
 mouth_left_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Left_Corner_X"
-)(dense_1)
+)(norm_2)
 mouth_left_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Left_Corner_Y"
-)(dense_1)
+)(norm_2)
 
 mouth_right_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Right_Corner_X"
-)(dense_1)
+)(norm_2)
 mouth_right_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Right_Corner_Y"
-)(dense_1)
+)(norm_2)
 
 mouth_center_top_lip_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Top_Lip_X"
-)(dense_1)
+)(norm_2)
 mouth_center_top_lip_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Top_Lip_Y"
-)(dense_1)
+)(norm_2)
 
 mouth_center_bottom_lip_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Bottom_Lip_X"
-)(dense_1)
+)(norm_2)
 mouth_center_bottom_lip_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Bottom_Lip_Y"
-)(dense_1)
+)(norm_2)
 
 model = tf.keras.Model(
     inputs=[input_layer],
@@ -305,7 +323,7 @@ model = tf.keras.Model(
 )
 
 model.compile(
-    optimizer=tf.keras.optimizers.Nadam(learning_rate=0.0001),
+    optimizer=tf.keras.optimizers.Nadam(),
     loss={
         "Left_Eye_Center_X": "mean_squared_error",
         "Left_Eye_Center_Y": "mean_squared_error",
@@ -444,6 +462,6 @@ history = model.fit(
             "Mouth_Center_Bottom_Lip_Y": y_val[:, 29],
         },
     ),
-    verbose=False,
+    verbose=True,
 )
 model.save("good_project_model", overwrite=True)
