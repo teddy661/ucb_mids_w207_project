@@ -6,8 +6,11 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint
 from PIL import Image
 from io import BytesIO
+import pickle
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -16,6 +19,8 @@ ROOT_DIR = Path(r"/tf/notebooks/facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 TEST_CSV = DATA_DIR.joinpath("test.csv")
+MODEL_DIR = Path("./model_saves").resolve()
+FINAL_MODEL_NAME="final-model"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
@@ -66,6 +71,8 @@ if not TEST_CSV.is_file():
     )
     exit()
 
+if not MODEL_DIR.is_dir():
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 def create_image_from_pixels(pixels) -> Image.Image:
     temp_image = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT))
@@ -117,7 +124,7 @@ np.random.seed(1234)
 shuffle = np.random.permutation(np.arange(imgs_all.shape[0]))
 imgs_all_sh, y_all_sh = imgs_all[shuffle], y_all[shuffle]
 
-split = (0.8, 0.2)
+split = (0.9, 0.1)
 splits = np.multiply(len(imgs_all_sh), split).astype(int)
 y_train, y_val = np.split(y_all_sh, [splits[0]])
 X_train, X_val = np.split(imgs_all_sh, [splits[0]])
@@ -391,6 +398,20 @@ model.compile(
 )
 model.summary()
 
+early_stopping = EarlyStopping(
+    monitor='val_loss',
+    mode='min',
+    verbose=1,
+    patience=50
+)
+
+model_checkpoint = ModelCheckpoint( 'best_model',
+                                    monitor='val_loss',
+                                    mode='min',
+                                    verbose=1,
+                                    save_best_only=True
+                                    )
+
 history = model.fit(
     x=X_train,
     y={
@@ -425,7 +446,7 @@ history = model.fit(
         "Mouth_Center_Bottom_Lip_X": y_train[:, 28],
         "Mouth_Center_Bottom_Lip_Y": y_train[:, 29],
     },
-    epochs=1000,
+    epochs=500,
     batch_size=100,
     validation_data=(
         X_val,
@@ -463,5 +484,9 @@ history = model.fit(
         },
     ),
     verbose=True,
+    callbacks= [early_stopping],
 )
-model.save("good_project_model", overwrite=True)
+with open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), 'wb') as history_file:
+    pickle.dump(history.history, history_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+model.save(MODEL_DIR.joinpath(FINAL_MODEL_NAME), overwrite=True)
