@@ -14,7 +14,7 @@ import pickle
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
-BATCH_SIZE = 10
+BATCH_SIZE = 16
 ROOT_DIR = Path(r"/tf/notebooks/facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
@@ -146,7 +146,7 @@ rescale = keras.layers.Rescaling(
 
 conv_1 = keras.layers.Conv2D(
     filters=16,
-    kernel_size=(2, 2),
+    kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_1",
     padding="same",
@@ -154,34 +154,34 @@ conv_1 = keras.layers.Conv2D(
 )(rescale)
 conv_2 = keras.layers.Conv2D(
     filters=32,
-    kernel_size=(2, 2),
+    kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_2",
     padding="same",
     activation="relu",
 )(conv_1)
-maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_1")(conv_2)
+maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_1")(conv_2)
 drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
 
 
 
 conv_3 = keras.layers.Conv2D(
-    filters=64,
-    kernel_size=(2, 2),
+    filters=32,
+    kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_3",
     padding="same",
     activation="relu",
 )(drop_1)
 conv_4 = keras.layers.Conv2D(
-    filters=128,
-    kernel_size=(2, 2),
+    filters=64,
+    kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_4",
     padding="same",
     activation="relu",
 )(conv_3)
-maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_3")(conv_4)
+maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_3")(conv_4)
 drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_3)
 
 
@@ -345,7 +345,7 @@ model = tf.keras.Model(
 )
 
 model.compile(
-    optimizer=tf.keras.optimizers.Nadam(),
+    optimizer=tf.keras.optimizers.Nadam(learning_rate=0.00005),
     loss={
         "Left_Eye_Center_X": "mse",
         "Left_Eye_Center_Y": "mse",
@@ -417,7 +417,8 @@ early_stopping = EarlyStopping(
     monitor='val_loss',
     mode='min',
     verbose=1,
-    patience=30
+    patience=5,
+    restore_best_weights=True,
 )
 
 model_checkpoint = ModelCheckpoint( 'best_model',
@@ -461,8 +462,8 @@ history = model.fit(
         "Mouth_Center_Bottom_Lip_X": y_train[:, 28],
         "Mouth_Center_Bottom_Lip_Y": y_train[:, 29],
     },
-    epochs=300,
-    batch_size=100,
+    epochs=1000,
+    batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
         {
