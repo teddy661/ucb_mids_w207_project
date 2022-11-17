@@ -152,9 +152,6 @@ conv_1 = keras.layers.Conv2D(
     padding="same",
     activation="relu",
 )(rescale)
-maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_1")(conv_1)
-drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
-
 conv_2 = keras.layers.Conv2D(
     filters=128,
     kernel_size=(2, 2),
@@ -162,9 +159,11 @@ conv_2 = keras.layers.Conv2D(
     name="conv_2",
     padding="same",
     activation="relu",
-)(drop_1)
-maxp_2 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_2")(conv_2)
-drop_2 = keras.layers.Dropout(0.25, name="Dropout_2")(maxp_2)
+)(conv_1)
+maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_1")(conv_2)
+drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
+
+
 
 conv_3 = keras.layers.Conv2D(
     filters=256,
@@ -173,10 +172,7 @@ conv_3 = keras.layers.Conv2D(
     name="conv_3",
     padding="same",
     activation="relu",
-)(drop_2)
-maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_3")(conv_3)
-drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_3)
-
+)(drop_1)
 conv_4 = keras.layers.Conv2D(
     filters=512,
     kernel_size=(2, 2),
@@ -184,16 +180,18 @@ conv_4 = keras.layers.Conv2D(
     name="conv_4",
     padding="same",
     activation="relu",
-)(drop_3)
-maxp_4 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_4")(conv_4)
-drop_4 = keras.layers.Dropout(0.25, name="Dropout_4")(maxp_4)
+)(conv_3)
+maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), name="pool_3")(conv_4)
+drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_3)
+
+
 
 
 ##
 ## Begin Fully Connected layers
 ##
 
-flat_1 = keras.layers.Flatten()(drop_4)
+flat_1 = keras.layers.Flatten()(drop_3)
 dense_1 = keras.layers.Dense(1024, name="fc_1", activation="elu")(flat_1)
 norm_1 = keras.layers.BatchNormalization(name="norm_1")(dense_1)
 
