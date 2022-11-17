@@ -145,11 +145,12 @@ rescale = keras.layers.Rescaling(
 ##
 
 conv_1 = keras.layers.Conv2D(
-    filters=16,
+    filters=32,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_1",
     padding="same",
+    kernel_initializer='he_uniform',
     activation="relu",
 )(rescale)
 conv_2 = keras.layers.Conv2D(
@@ -158,31 +159,53 @@ conv_2 = keras.layers.Conv2D(
     strides=(1, 1),
     name="conv_2",
     padding="same",
+    kernel_initializer='he_uniform',
     activation="relu",
 )(conv_1)
 maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_1")(conv_2)
-drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
-
-
+#drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
 
 conv_3 = keras.layers.Conv2D(
-    filters=32,
+    filters=64,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_3",
     padding="same",
+    kernel_initializer='he_uniform',
     activation="relu",
-)(drop_1)
+)(maxp_1)
 conv_4 = keras.layers.Conv2D(
     filters=64,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_4",
     padding="same",
+    kernel_initializer='he_uniform',
     activation="relu",
 )(conv_3)
-maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_3")(conv_4)
-drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_3)
+maxp_2 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_2")(conv_4)
+#drop_2 = keras.layers.Dropout(0.25, name="Dropout_2")(maxp_2)
+
+conv_5 = keras.layers.Conv2D(
+    filters=128,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_5",
+    padding="same",
+    kernel_initializer='he_uniform',
+    activation="relu",
+)(maxp_2)
+conv_6 = keras.layers.Conv2D(
+    filters=128,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_6",
+    padding="same",
+    kernel_initializer='he_uniform',
+    activation="relu",
+)(conv_5)
+maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_3")(conv_6)
+#drop_2 = keras.layers.Dropout(0.25, name="Dropout_2")(maxp_2)
 
 
 
@@ -191,11 +214,11 @@ drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_3)
 ## Begin Fully Connected layers
 ##
 
-flat_1 = keras.layers.Flatten()(drop_3)
-dense_1 = keras.layers.Dense(1024, name="fc_1", activation="elu")(flat_1)
-norm_1 = keras.layers.BatchNormalization(name="norm_1")(dense_1)
+flat_1 = keras.layers.Flatten()(maxp_3)
+#dense_1 = keras.layers.Dense(1024, name="fc_1", activation="elu")(flat_1)
+#norm_1 = keras.layers.BatchNormalization(name="norm_1")(dense_1)
 
-dense_2 = keras.layers.Dense(1024, name="fc_2", activation="elu")(norm_1)
+dense_2 = keras.layers.Dense(1024, name="fc_2", kernel_initializer='he_uniform', activation="relu")(flat_1)
 norm_2 = keras.layers.BatchNormalization(name="norm_2")(dense_2)
 
 ##
@@ -345,7 +368,7 @@ model = tf.keras.Model(
 )
 
 model.compile(
-    optimizer=tf.keras.optimizers.Nadam(learning_rate=0.00005),
+    optimizer=tf.keras.optimizers.Nadam(learning_rate=0.0001),
     loss={
         "Left_Eye_Center_X": "mse",
         "Left_Eye_Center_Y": "mse",
