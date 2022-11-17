@@ -145,7 +145,7 @@ rescale = keras.layers.Rescaling(
 ##
 
 conv_1 = keras.layers.Conv2D(
-    filters=64,
+    filters=16,
     kernel_size=(2, 2),
     strides=(1, 1),
     name="conv_1",
@@ -153,7 +153,7 @@ conv_1 = keras.layers.Conv2D(
     activation="relu",
 )(rescale)
 conv_2 = keras.layers.Conv2D(
-    filters=128,
+    filters=32,
     kernel_size=(2, 2),
     strides=(1, 1),
     name="conv_2",
@@ -166,7 +166,7 @@ drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
 
 
 conv_3 = keras.layers.Conv2D(
-    filters=256,
+    filters=64,
     kernel_size=(2, 2),
     strides=(1, 1),
     name="conv_3",
@@ -174,7 +174,7 @@ conv_3 = keras.layers.Conv2D(
     activation="relu",
 )(drop_1)
 conv_4 = keras.layers.Conv2D(
-    filters=512,
+    filters=128,
     kernel_size=(2, 2),
     strides=(1, 1),
     name="conv_4",
@@ -417,7 +417,7 @@ early_stopping = EarlyStopping(
     monitor='val_loss',
     mode='min',
     verbose=1,
-    patience=50
+    patience=30
 )
 
 model_checkpoint = ModelCheckpoint( 'best_model',
@@ -461,7 +461,7 @@ history = model.fit(
         "Mouth_Center_Bottom_Lip_X": y_train[:, 28],
         "Mouth_Center_Bottom_Lip_Y": y_train[:, 29],
     },
-    epochs=500,
+    epochs=300,
     batch_size=100,
     validation_data=(
         X_val,
