@@ -23,36 +23,36 @@ FINAL_MODEL_NAME = "final-model"
 TF_MODEL = MODEL_DIR.joinpath(FINAL_MODEL_NAME)
 
 OUTPUTS = [
-    "left_eye_center_x",
-    "left_eye_center_y",
-    "right_eye_center_x",
-    "right_eye_center_y",
-    "left_eye_inner_corner_x",
-    "left_eye_inner_corner_y",
-    "left_eye_outer_corner_x",
-    "left_eye_outer_corner_y",
-    "right_eye_inner_corner_x",
-    "right_eye_inner_corner_y",
-    "right_eye_outer_corner_x",
-    "right_eye_outer_corner_y",
-    "left_eyebrow_inner_end_x",
-    "left_eyebrow_inner_end_y",
-    "left_eyebrow_outer_end_x",
-    "left_eyebrow_outer_end_y",
-    "right_eyebrow_inner_end_x",
-    "right_eyebrow_inner_end_y",
-    "right_eyebrow_outer_end_x",
-    "right_eyebrow_outer_end_y",
-    "nose_tip_x",
-    "nose_tip_y",
-    "mouth_left_corner_x",
-    "mouth_left_corner_y",
-    "mouth_right_corner_x",
-    "mouth_right_corner_y",
-    "mouth_center_top_lip_x",
-    "mouth_center_top_lip_y",
-    "mouth_center_bottom_lip_x",
-    "mouth_center_bottom_lip_y",
+    "p_left_eye_center_x",
+    "p_left_eye_center_y",
+    "p_right_eye_center_x",
+    "p_right_eye_center_y",
+    "p_left_eye_inner_corner_x",
+    "p_left_eye_inner_corner_y",
+    "p_left_eye_outer_corner_x",
+    "p_left_eye_outer_corner_y",
+    "p_right_eye_inner_corner_x",
+    "p_right_eye_inner_corner_y",
+    "p_right_eye_outer_corner_x",
+    "p_right_eye_outer_corner_y",
+    "p_left_eyebrow_inner_end_x",
+    "p_left_eyebrow_inner_end_y",
+    "p_left_eyebrow_outer_end_x",
+    "p_left_eyebrow_outer_end_y",
+    "p_right_eyebrow_inner_end_x",
+    "p_right_eyebrow_inner_end_y",
+    "p_right_eyebrow_outer_end_x",
+    "p_right_eyebrow_outer_end_y",
+    "p_nose_tip_x",
+    "p_nose_tip_y",
+    "p_mouth_left_corner_x",
+    "p_mouth_left_corner_y",
+    "p_mouth_right_corner_x",
+    "p_mouth_right_corner_y",
+    "p_mouth_center_top_lip_x",
+    "p_mouth_center_top_lip_y",
+    "p_mouth_center_bottom_lip_x",
+    "p_mouth_center_bottom_lip_y",
 ]
 
 if not TRAIN_CSV.is_file():
@@ -88,8 +88,8 @@ def create_png(pixel_string):
     return png_image
 
 
-train = pd.read_csv(TRAIN_CSV, encoding="utf8")
-train["png"] = train["Image"].apply(create_png)
+train_df = pd.read_csv(TRAIN_CSV, encoding="utf8")
+train_df["png"] = train_df["Image"].apply(create_png)
 
 
 def create_df_from_results(results):
@@ -99,7 +99,7 @@ def create_df_from_results(results):
 
 imgs_all = []
 np.random.seed(1234)
-for idx, r in train.iterrows():
+for idx, r in train_df.iterrows():
     img = tf.keras.preprocessing.image.load_img(
         BytesIO(r["png"]),
         color_mode="grayscale",
@@ -108,16 +108,17 @@ for idx, r in train.iterrows():
     img = tf.keras.preprocessing.image.img_to_array(img)
     imgs_all.append(img)
 
-train_data = np.array(imgs_all)
+train_np_data = np.array(imgs_all)
 
 
 model = tf.keras.models.load_model(TF_MODEL)
-results = model.predict(train_data[:2], batch_size=16, verbose=1)
+results = model.predict(train_np_data, batch_size=16, verbose=2)
 np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
-df = pd.DataFrame(columns=OUTPUTS)
-df = df.append(pd.DataFrame(np_results, columns=OUTPUTS), ignore_index=True)
-print(df)
+results_df = pd.DataFrame(np_results, columns=OUTPUTS)
+all_data_df = train_df.join(results_df)
+print(all_data_df.shape)
+
 # print(np_results.shape)
 # np.set_printoptions(threshold=sys.maxsize)
 # print(np_results)
