@@ -20,7 +20,7 @@ DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 TEST_CSV = DATA_DIR.joinpath("test.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME="final-model"
+FINAL_MODEL_NAME = "final-model"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
@@ -73,6 +73,7 @@ if not TEST_CSV.is_file():
 
 if not MODEL_DIR.is_dir():
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
 
 def create_image_from_pixels(pixels) -> Image.Image:
     temp_image = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT))
@@ -398,19 +399,11 @@ model.compile(
 )
 model.summary()
 
-early_stopping = EarlyStopping(
-    monitor='val_loss',
-    mode='min',
-    verbose=1,
-    patience=50
-)
+early_stopping = EarlyStopping(monitor="val_loss", mode="min", verbose=1, patience=50)
 
-model_checkpoint = ModelCheckpoint( 'best_model',
-                                    monitor='val_loss',
-                                    mode='min',
-                                    verbose=1,
-                                    save_best_only=True
-                                    )
+model_checkpoint = ModelCheckpoint(
+    "best_model", monitor="val_loss", mode="min", verbose=1, save_best_only=True
+)
 
 history = model.fit(
     x=X_train,
@@ -484,9 +477,9 @@ history = model.fit(
         },
     ),
     verbose=True,
-    callbacks= [early_stopping],
+    callbacks=[early_stopping],
 )
-with open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), 'wb') as history_file:
+with open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), "wb") as history_file:
     pickle.dump(history.history, history_file, protocol=pickle.HIGHEST_PROTOCOL)
 
 model.save(MODEL_DIR.joinpath(FINAL_MODEL_NAME), overwrite=True)
