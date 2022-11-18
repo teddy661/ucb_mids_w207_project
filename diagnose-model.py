@@ -91,12 +91,6 @@ def create_png(pixel_string):
 train_df = pd.read_csv(TRAIN_CSV, encoding="utf8")
 train_df["png"] = train_df["Image"].apply(create_png)
 
-
-def create_df_from_results(results):
-    for idx, output in enumerate(OUTPUTS):
-        pass
-
-
 imgs_all = []
 np.random.seed(1234)
 for idx, r in train_df.iterrows():
@@ -112,7 +106,7 @@ train_np_data = np.array(imgs_all)
 
 
 model = tf.keras.models.load_model(TF_MODEL)
-results = model.predict(train_np_data, batch_size=16, verbose=2)
+results = model.predict(train_np_data, batch_size=100, verbose=2)
 np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
 results_df = pd.DataFrame(np_results, columns=OUTPUTS)
