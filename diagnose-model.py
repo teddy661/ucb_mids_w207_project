@@ -111,8 +111,105 @@ np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
 results_df = pd.DataFrame(np_results, columns=OUTPUTS)
 all_data_df = train_df.join(results_df)
+all_data_df.drop(columns=["png", "Image"], inplace=True)
+all_data_df["delta_left_eye_center_x"] = (
+    all_data_df["left_eye_center_x"] - all_data_df["p_left_eye_center_x"]
+)
+all_data_df["delta_left_eye_center_y"] = (
+    all_data_df["left_eye_center_y"] - all_data_df["p_left_eye_center_y"]
+)
+all_data_df["delta_right_eye_center_x"] = (
+    all_data_df["right_eye_center_x"] - all_data_df["p_right_eye_center_x"]
+)
+all_data_df["delta_right_eye_center_y"] = (
+    all_data_df["right_eye_center_y"] - all_data_df["p_right_eye_center_y"]
+)
+all_data_df["delta_left_eye_inner_corner_x"] = (
+    all_data_df["left_eye_inner_corner_x"] - all_data_df["p_left_eye_inner_corner_x"]
+)
+all_data_df["delta_left_eye_inner_corner_y"] = (
+    all_data_df["left_eye_inner_corner_y"] - all_data_df["p_left_eye_inner_corner_y"]
+)
+all_data_df["delta_left_eye_outer_corner_x"] = (
+    all_data_df["left_eye_outer_corner_x"] - all_data_df["p_left_eye_outer_corner_x"]
+)
+all_data_df["delta_left_eye_outer_corner_y"] = (
+    all_data_df["left_eye_outer_corner_y"] - all_data_df["p_left_eye_outer_corner_y"]
+)
+all_data_df["delta_right_eye_inner_corner_x"] = (
+    all_data_df["right_eye_inner_corner_x"] - all_data_df["p_right_eye_inner_corner_x"]
+)
+all_data_df["delta_right_eye_inner_corner_y"] = (
+    all_data_df["right_eye_inner_corner_y"] - all_data_df["p_right_eye_inner_corner_y"]
+)
+all_data_df["delta_right_eye_outer_corner_x"] = (
+    all_data_df["right_eye_outer_corner_x"] - all_data_df["p_right_eye_outer_corner_x"]
+)
+all_data_df["delta_right_eye_outer_corner_y"] = (
+    all_data_df["right_eye_outer_corner_y"] - all_data_df["p_right_eye_outer_corner_y"]
+)
+all_data_df["delta_left_eyebrow_inner_end_x"] = (
+    all_data_df["left_eyebrow_inner_end_x"] - all_data_df["p_left_eyebrow_inner_end_x"]
+)
+all_data_df["delta_left_eyebrow_inner_end_y"] = (
+    all_data_df["left_eyebrow_inner_end_y"] - all_data_df["p_left_eyebrow_inner_end_y"]
+)
+all_data_df["delta_left_eyebrow_outer_end_x"] = (
+    all_data_df["left_eyebrow_outer_end_x"] - all_data_df["p_left_eyebrow_outer_end_x"]
+)
+all_data_df["delta_left_eyebrow_outer_end_y"] = (
+    all_data_df["left_eyebrow_outer_end_y"] - all_data_df["p_left_eyebrow_outer_end_y"]
+)
+all_data_df["delta_right_eyebrow_inner_end_x"] = (
+    all_data_df["right_eyebrow_inner_end_x"]
+    - all_data_df["p_right_eyebrow_inner_end_x"]
+)
+all_data_df["delta_right_eyebrow_inner_end_y"] = (
+    all_data_df["right_eyebrow_inner_end_y"]
+    - all_data_df["p_right_eyebrow_inner_end_y"]
+)
+all_data_df["delta_right_eyebrow_outer_end_x"] = (
+    all_data_df["right_eyebrow_outer_end_x"]
+    - all_data_df["p_right_eyebrow_outer_end_x"]
+)
+all_data_df["delta_right_eyebrow_outer_end_y"] = (
+    all_data_df["right_eyebrow_outer_end_y"]
+    - all_data_df["p_right_eyebrow_outer_end_y"]
+)
+all_data_df["delta_nose_tip_x"] = (
+    all_data_df["nose_tip_x"] - all_data_df["p_nose_tip_x"]
+)
+all_data_df["delta_nose_tip_y"] = (
+    all_data_df["nose_tip_y"] - all_data_df["p_nose_tip_y"]
+)
+all_data_df["delta_mouth_left_corner_x"] = (
+    all_data_df["mouth_left_corner_x"] - all_data_df["p_mouth_left_corner_x"]
+)
+all_data_df["delta_mouth_left_corner_y"] = (
+    all_data_df["mouth_left_corner_y"] - all_data_df["p_mouth_left_corner_y"]
+)
+all_data_df["delta_mouth_right_corner_x"] = (
+    all_data_df["mouth_right_corner_x"] - all_data_df["p_mouth_right_corner_x"]
+)
+all_data_df["delta_mouth_right_corner_y"] = (
+    all_data_df["mouth_right_corner_y"] - all_data_df["p_mouth_right_corner_y"]
+)
+all_data_df["delta_mouth_center_top_lip_x"] = (
+    all_data_df["mouth_center_top_lip_x"] - all_data_df["p_mouth_center_top_lip_x"]
+)
+all_data_df["delta_mouth_center_top_lip_y"] = (
+    all_data_df["mouth_center_top_lip_y"] - all_data_df["p_mouth_center_top_lip_y"]
+)
+all_data_df["delta_mouth_center_bottom_lip_x"] = (
+    all_data_df["mouth_center_bottom_lip_x"]
+    - all_data_df["p_mouth_center_bottom_lip_x"]
+)
+all_data_df["delta_mouth_center_bottom_lip_y"] = (
+    all_data_df["mouth_center_bottom_lip_y"]
+    - all_data_df["p_mouth_center_bottom_lip_y"]
+)
 
-print(df["left_eye_center_x"] - df["p_left_eye_center_x"])
+all_data_df.to_csv("train_compare.csv", index=True, encoding="utf-8")
 
 # print(np_results.shape)
 # np.set_printoptions(threshold=sys.maxsize)
