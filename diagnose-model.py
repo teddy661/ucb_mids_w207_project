@@ -111,7 +111,8 @@ np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
 results_df = pd.DataFrame(np_results, columns=OUTPUTS)
 all_data_df = train_df.join(results_df)
-print(all_data_df.shape)
+
+print(df["left_eye_center_x"] - df["p_left_eye_center_x"])
 
 # print(np_results.shape)
 # np.set_printoptions(threshold=sys.maxsize)
