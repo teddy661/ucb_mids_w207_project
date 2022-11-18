@@ -117,7 +117,6 @@ for idx, r in train.iterrows():
     img = tf.keras.preprocessing.image.img_to_array(img)
     imgs_all.append(img)
 
-imgs_all = np.stack(imgs_all)
 y_all = np.array(train[classes])
 ###
 tf.random.set_seed(1234)
