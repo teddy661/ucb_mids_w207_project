@@ -77,39 +77,15 @@ if not TF_MODEL.is_dir():
     exit()
 
 
-def create_image_from_pixels(pixels) -> Image.Image:
-    temp_image = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT))
-    temp_image.putdata([int(x) for x in pixels.split()])
-
-    return temp_image
-
-
-def create_png(pixel_string):
-    """
-    Create Images from the integer text lists in the csv file
-    """
-
-    temp_image = create_image_from_pixels(pixel_string)
-
-    buf = io.BytesIO()
-    temp_image.save(buf, format="PNG")
-    png_image = buf.getvalue()
-    return png_image
-
-
 test_df = pd.read_csv(TEST_CSV, encoding="utf8")
-test_df["png"] = test_df["Image"].apply(create_png)
 
 imgs_all = []
-np.random.seed(1234)
 for idx, r in test_df.iterrows():
-    img = tf.keras.preprocessing.image.load_img(
-        BytesIO(r["png"]),
-        color_mode="grayscale",
-        target_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
+    imgs_all.append(
+        np.array(r["Image"].split())
+        .astype(np.int64)
+        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
-    img = tf.keras.preprocessing.image.img_to_array(img)
-    imgs_all.append(img)
 
 test_np_data = np.array(imgs_all)
 
