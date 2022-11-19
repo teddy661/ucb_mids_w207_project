@@ -83,19 +83,28 @@ num_classes = len(classes)
 ###
 
 train_only_all_points = train.dropna()
+mouth_left_corner_points = train[train["mouth_left_corner_x"].notna()]
 
 imgs_all = []
-np.random.seed(1234)
 for idx, r in train_only_all_points.iterrows():
     imgs_all.append(
         np.array(r["Image"].split())
         .astype(np.int64)
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
-
-
 imgs_all = np.array(imgs_all)
 y_all = np.array(train_only_all_points[classes])
+
+
+imgs_mounth_points_all = []
+for idx, r in mouth_left_corner_points.iterrows():
+    imgs_mounth_points_all.append(
+        np.array(r["Image"].split())
+        .astype(np.int64)
+        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
+    )
+imgs_mount_points_all = np.array(imgs_mounth_points_all)
+y_mouth_points_all = np.array(mouth_left_corner_points[classes])
 
 ###
 tf.random.set_seed(1234)
@@ -108,9 +117,10 @@ splits = np.multiply(len(imgs_all_sh), split).astype(int)
 y_train, y_val = np.split(y_all_sh, [splits[0]])
 X_train, X_val = np.split(imgs_all_sh, [splits[0]])
 
+y_train_mouth, y_val_mouth = np.split(y_mouth_points_all, [splits[0]])
+X_train_mouth, X_val_mouth = np.split(imgs_mount_points_all, [splits[0]])
 
 tf.keras.backend.clear_session()
-tf.random.set_seed(1234)
 
 input_layer = keras.layers.Input(
     shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name="InputLayer"
