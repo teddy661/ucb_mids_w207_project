@@ -14,7 +14,7 @@ import pickle
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
-BATCH_SIZE = 16
+BATCH_SIZE = 64
 ROOT_DIR = Path(r"/tf/notebooks/facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")

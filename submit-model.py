@@ -18,7 +18,9 @@ ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TEST_CSV = DATA_DIR.joinpath("test.csv")
 ID_LOOKUP_TABLE = DATA_DIR.joinpath("IdLookupTable.csv")
-MODEL_DIR = Path("./model_saves").resolve()
+MODEL_DIR = Path("model_saves").resolve()
+FINAL_MODEL_NAME = "0161-54.37"
+FINAL_MODEL_NAME = "0087-56.96"
 FINAL_MODEL_NAME = "final-model"
 TF_MODEL = MODEL_DIR.joinpath(FINAL_MODEL_NAME)
 
