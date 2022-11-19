@@ -1,15 +1,8 @@
-import os
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 from pathlib import Path
-from PIL import Image
-from io import BytesIO
-import pandas as pd
-import io
-import numpy as np
-import sys
 
+import numpy as np
+import pandas as pd
+import tensorflow as tf
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96

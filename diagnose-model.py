@@ -1,15 +1,10 @@
-import os
-import numpy as np
-import tensorflow as tf
-from tensorflow import keras
-from pathlib import Path
-from PIL import Image
-from io import BytesIO
-import pandas as pd
 import io
-import numpy as np
-import sys
+from pathlib import Path
 
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from PIL import Image
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -66,26 +61,6 @@ if not TRAIN_CSV.is_file():
 if not TF_MODEL.is_dir():
     print("Terminating, tensorflow model doesn't exist {0}".format(TF_MODEL))
     exit()
-
-
-def create_image_from_pixels(pixels) -> Image.Image:
-    temp_image = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT))
-    temp_image.putdata([int(x) for x in pixels.split()])
-
-    return temp_image
-
-
-def create_png(pixel_string):
-    """
-    Create Images from the integer text lists in the csv file
-    """
-
-    temp_image = create_image_from_pixels(pixel_string)
-
-    buf = io.BytesIO()
-    temp_image.save(buf, format="PNG")
-    png_image = buf.getvalue()
-    return png_image
 
 
 train_df = pd.read_csv(TRAIN_CSV, encoding="utf8")
