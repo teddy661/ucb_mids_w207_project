@@ -1,21 +1,17 @@
-import pandas as pd
-import io
-import numpy as np
+import pickle
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.models import Sequential
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.callbacks import ModelCheckpoint
-from PIL import Image
-from io import BytesIO
-import pickle
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 BATCH_SIZE = 64
-ROOT_DIR = Path(r"/tf/notebooks/facial-keypoints-detection").resolve()
+ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 TEST_CSV = DATA_DIR.joinpath("test.csv")
@@ -75,30 +71,9 @@ if not MODEL_DIR.is_dir():
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def create_image_from_pixels(pixels) -> Image.Image:
-    temp_image = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT))
-    temp_image.putdata([int(x) for x in pixels.split()])
-
-    return temp_image
-
-
-def create_png(pixel_string):
-    """
-    Create Images from the integer text lists in the csv file
-    """
-
-    temp_image = create_image_from_pixels(pixel_string)
-
-    buf = io.BytesIO()
-    temp_image.save(buf, format="PNG")
-    png_image = buf.getvalue()
-    return png_image
-
-
 train = pd.read_csv(TRAIN_CSV, encoding="utf8")
-train["png"] = train["Image"].apply(create_png)
-train.dropna(inplace=True)
 classes = train.select_dtypes(include=[np.number]).columns
+
 num_classes = len(classes)
 
 # for col in feature_cols:
@@ -106,19 +81,22 @@ num_classes = len(classes)
 #    train[col_zscore] = (train[col] - train[col].mean())/train[col].std(ddof=0)
 
 ###
+
+train_only_all_points = train.dropna()
+
 imgs_all = []
 np.random.seed(1234)
-for idx, r in train.iterrows():
-    img = tf.keras.preprocessing.image.load_img(
-        BytesIO(r["png"]),
-        color_mode="grayscale",
-        target_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
+for idx, r in train_only_all_points.iterrows():
+    imgs_all.append(
+        np.array(r["Image"].split())
+        .astype(np.int64)
+        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
-    img = tf.keras.preprocessing.image.img_to_array(img)
-    imgs_all.append(img)
+
 
 imgs_all = np.array(imgs_all)
-y_all = np.array(train[classes])
+y_all = np.array(train_only_all_points[classes])
+
 ###
 tf.random.set_seed(1234)
 np.random.seed(1234)
@@ -224,13 +202,13 @@ norm_3 = keras.layers.BatchNormalization(name="norm_3")(maxp_3)
 
 flat_1 = keras.layers.Flatten()(norm_3)
 dense_1 = keras.layers.Dense(
-    1024, name="fc_1", kernel_initializer="he_uniform", activation="relu"
+    1024, name="fc_1", kernel_initializer="he_uniform", activation="elu"
 )(flat_1)
 # drop_1 = keras.layers.Dropout(0.20, name="Dropout_1")(dense_1)
 norm_4 = keras.layers.BatchNormalization(name="norm_4")(dense_1)
 
 dense_2 = keras.layers.Dense(
-    1024, name="fc_2", kernel_initializer="he_uniform", activation="relu"
+    1024, name="fc_2", kernel_initializer="he_uniform", activation="elu"
 )(norm_4)
 # drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
 norm_5 = keras.layers.BatchNormalization(name="norm_5")(dense_2)
@@ -539,9 +517,12 @@ history = model.fit(
             "Mouth_Center_Bottom_Lip_Y": y_val[:, 29],
         },
     ),
-    verbose=0,
-    callbacks=[early_stopping, model_checkpoint],
+    verbose=2,
+    # callbacks=[early_stopping, model_checkpoint],
+    callbacks=[early_stopping],
 )
+
+
 with open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), "wb") as history_file:
     pickle.dump(history.history, history_file, protocol=pickle.HIGHEST_PROTOCOL)
 
