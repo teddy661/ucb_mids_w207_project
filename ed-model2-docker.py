@@ -117,6 +117,7 @@ for idx, r in train.iterrows():
     img = tf.keras.preprocessing.image.img_to_array(img)
     imgs_all.append(img)
 
+imgs_all = np.array(imgs_all)
 y_all = np.array(train[classes])
 ###
 tf.random.set_seed(1234)
@@ -459,11 +460,12 @@ early_stopping = EarlyStopping(
 )
 
 model_checkpoint = ModelCheckpoint(
-    "checkpoint_best_model",
+    "model_checkpoints/{epoch:04d}-{val_loss:.2f}",
     monitor="val_loss",
     mode="min",
     verbose=1,
-    save_best_only=True,
+    save_weights_only=False,
+    save_best_only=False,
 )
 
 history = model.fit(
@@ -537,8 +539,8 @@ history = model.fit(
             "Mouth_Center_Bottom_Lip_Y": y_val[:, 29],
         },
     ),
-    verbose=2,
-    callbacks=[early_stopping],
+    verbose=0,
+    callbacks=[early_stopping, model_checkpoint],
 )
 with open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), "wb") as history_file:
     pickle.dump(history.history, history_file, protocol=pickle.HIGHEST_PROTOCOL)
