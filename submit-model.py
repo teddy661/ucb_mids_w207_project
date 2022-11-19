@@ -118,7 +118,6 @@ np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
 results_df = pd.DataFrame(np_results, columns=OUTPUTS)
 results_df.index += 1
-print(results_df.head())
 results_df.to_csv("test_results.csv", index=False, encoding="utf-8")
 
 reformatted_results = []
@@ -136,6 +135,6 @@ id_lookup_df = pd.read_csv(ID_LOOKUP_TABLE, encoding="utf8")
 submission_df = pd.merge(
     id_lookup_df, reformatted_results_df, how="left", on=["ImageId", "FeatureName"]
 )
-submission_df.drop(columns=["Location_x"], inplace=True)
+submission_df.drop(columns=["ImageId", "FeatureName", "Location_x"], inplace=True)
 submission_df.rename(columns={"Location_y": "Location"}, inplace=True)
 submission_df.to_csv("submission.csv", index=False, encoding="utf-8")
