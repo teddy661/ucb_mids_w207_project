@@ -89,18 +89,14 @@ def create_png(pixel_string):
 
 
 train_df = pd.read_csv(TRAIN_CSV, encoding="utf8")
-train_df["png"] = train_df["Image"].apply(create_png)
 
 imgs_all = []
-np.random.seed(1234)
 for idx, r in train_df.iterrows():
-    img = tf.keras.preprocessing.image.load_img(
-        BytesIO(r["png"]),
-        color_mode="grayscale",
-        target_size=(IMAGE_WIDTH, IMAGE_HEIGHT),
+    imgs_all.append(
+        np.array(r["Image"].split())
+        .astype(np.int64)
+        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
-    img = tf.keras.preprocessing.image.img_to_array(img)
-    imgs_all.append(img)
 
 train_np_data = np.array(imgs_all)
 
@@ -111,7 +107,7 @@ np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
 results_df = pd.DataFrame(np_results, columns=OUTPUTS)
 all_data_df = train_df.join(results_df)
-all_data_df.drop(columns=["png", "Image"], inplace=True)
+all_data_df.drop(columns=["Image"], inplace=True)
 all_data_df["delta_left_eye_center_x"] = (
     all_data_df["left_eye_center_x"] - all_data_df["p_left_eye_center_x"]
 )
@@ -210,13 +206,3 @@ all_data_df["delta_mouth_center_bottom_lip_y"] = (
 )
 
 all_data_df.to_csv("train_compare.csv", index=True, encoding="utf-8")
-
-# print(np_results.shape)
-# np.set_printoptions(threshold=sys.maxsize)
-# print(np_results)
-# converted = np.array(test.iloc[0]['Image'].split()).astype(np.int64).reshape(IMAGE_WIDTH,IMAGE_HEIGHT)
-# print(np.array_equal(imgs_all[0], converted))
-
-# print(converted.shape)
-# np.set_printoptions(threshold=sys.maxsize)
-# print(imgs_all[0])
