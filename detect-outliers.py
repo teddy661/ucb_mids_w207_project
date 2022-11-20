@@ -66,9 +66,15 @@ def int_string_to_numpy(int_string):
 cols = 5
 
 
+def max_count_of_values(np_array):
+    values, counts = np.array(np.unique(np_array, return_counts=True))
+    return counts.max()
+
+
 train_df = pd.read_csv(TRAIN_CSV, encoding="utf8")
 train_df["image_as_np"] = train_df["Image"].apply(int_string_to_numpy)
 train_df["gray_levels"] = train_df["image_as_np"].apply(lambda x: len(np.unique(x)))
+train_df["max_gray_count"] = train_df["image_as_np"].apply(max_count_of_values)
 train_df["delta_eye_centers_x"] = (
     train_df["left_eye_center_x"] - train_df["right_eye_center_x"]
 )
@@ -76,9 +82,21 @@ train_df["delta_eye_centers_y"] = (
     train_df["left_eye_center_y"] - train_df["right_eye_center_y"]
 )
 
+print(train_df["max_gray_count"].describe())
+lots_of_nothing_images = train_df.loc[train_df["max_gray_count"] >= 1600]
+print(lots_of_nothing_images.shape[0])
+rows = math.floor(lots_of_nothing_images.shape[0] / (cols - 1))
+fig = plt.figure(figsize=(8, 8))
+i = 1
+for index, row in lots_of_nothing_images.iterrows():
+    fig.add_subplot(rows, cols, i)
+    img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
+    i += 1
+plt.show()
+
 
 print(train_df["delta_eye_centers_x"].describe())
-low_eye_x_distance_images = train_df.loc[train_df["delta_eye_centers_x"] <= 15]
+low_eye_x_distance_images = train_df.loc[train_df["delta_eye_centers_x"] <= 20]
 print(low_eye_x_distance_images.shape[0])
 
 rows = math.floor(low_eye_x_distance_images.shape[0] / (cols - 1))
@@ -106,7 +124,7 @@ plt.show()
 
 
 print(train_df["gray_levels"].describe())
-low_gray_count_images = train_df.loc[train_df["gray_levels"] < 100]
+low_gray_count_images = train_df.loc[train_df["gray_levels"] <= 110]
 print(low_gray_count_images.shape[0])
 
 
