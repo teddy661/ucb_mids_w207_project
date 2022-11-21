@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from PIL import Image
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
