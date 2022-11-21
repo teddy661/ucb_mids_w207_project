@@ -5,13 +5,12 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 BATCH_SIZE = 64
-ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
+ROOT_DIR = Path(r".").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 TEST_CSV = DATA_DIR.joinpath("test.csv")

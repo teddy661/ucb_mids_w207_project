@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -270,7 +269,7 @@ dense_2 = keras.layers.Dense(
     1024, name="fc_2", kernel_initializer="he_uniform", activation="relu"
 )(norm_100)
 # drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
-norm_101= keras.layers.BatchNormalization(name="norm_101")(dense_2)
+norm_101 = keras.layers.BatchNormalization(name="norm_101")(dense_2)
 
 ##
 ## End Fully Connected Layers

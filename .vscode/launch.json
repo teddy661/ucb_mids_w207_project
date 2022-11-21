@@ -24,6 +24,15 @@
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     },
     {
+      "name": "model-runner",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/model-ed4.py",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "env": { "PYTHONPATH": "${workspaceRoot}" }
+    },
+    {
       "name": "create db",
       "type": "python",
       "request": "launch",
