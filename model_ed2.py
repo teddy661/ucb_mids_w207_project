@@ -9,11 +9,10 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 ROOT_DIR = Path(r".").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
-TEST_CSV = DATA_DIR.joinpath("test.csv")
 MODEL_DIR = Path("./model_saves").resolve()
 FINAL_MODEL_NAME = "final-model"
 
@@ -58,13 +57,6 @@ if not TRAIN_CSV.is_file():
     )
     exit()
 
-if not TEST_CSV.is_file():
-    print(
-        "Terminating, Test data csv file doe not exist or is not a file {0}".format(
-            TEST_CSV
-        )
-    )
-    exit()
 
 if not MODEL_DIR.is_dir():
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
@@ -95,16 +87,6 @@ imgs_all = np.array(imgs_all)
 y_all = np.array(train_only_all_points[classes])
 
 
-imgs_mounth_points_all = []
-for idx, r in mouth_left_corner_points.iterrows():
-    imgs_mounth_points_all.append(
-        np.array(r["Image"].split())
-        .astype(np.int64)
-        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
-    )
-imgs_mount_points_all = np.array(imgs_mounth_points_all)
-y_mouth_points_all = np.array(mouth_left_corner_points[classes])
-
 ###
 tf.random.set_seed(1234)
 np.random.seed(1234)
@@ -116,8 +98,6 @@ splits = np.multiply(len(imgs_all_sh), split).astype(int)
 y_train, y_val = np.split(y_all_sh, [splits[0]])
 X_train, X_val = np.split(imgs_all_sh, [splits[0]])
 
-y_train_mouth, y_val_mouth = np.split(y_mouth_points_all, [splits[0]])
-X_train_mouth, X_val_mouth = np.split(imgs_mount_points_all, [splits[0]])
 
 tf.keras.backend.clear_session()
 
