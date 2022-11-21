@@ -8,6 +8,12 @@ from PIL import Image
 IMAGE_SIZE = (96, 96)
 
 
+def display_image(png_string):
+    # im = Image.open(io.BytesIO(df.iloc[0]['png_image']))
+    im = Image.open(io.BytesIO(png_string))
+    im.show()
+
+
 def load_image_data(data_path) -> pd.DataFrame:
     """
     Load the data from the csv file into a pandas dataframe

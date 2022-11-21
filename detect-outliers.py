@@ -1,10 +1,9 @@
+import math
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from matplotlib import pyplot as plt
-import math
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96

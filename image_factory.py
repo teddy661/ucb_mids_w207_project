@@ -5,7 +5,7 @@ from math import ceil
 from PIL import Image
 
 import db.db_access as dba
-from db.create_db import get_paths
+from db.db_creator import get_paths
 from face_data import FaceData
 
 IMAGE_LIMT = 100

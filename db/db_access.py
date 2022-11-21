@@ -3,9 +3,8 @@ import sqlite3
 from pathlib import Path
 
 import numpy as np
-import PIL.Image as Image
 
-from db.image_loader import create_image_from_pixels
+from db.image_utils import create_image_from_pixels
 from face_data import FaceData, Point
 
 

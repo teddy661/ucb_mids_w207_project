@@ -1,62 +1,10 @@
 import argparse
-import io
 import os
 import sqlite3
 from pathlib import Path
 
-from PIL import Image
-
-from db.image_loader import load_image_data
-
-
-def get_paths() -> tuple:
-
-    ROOT_DIR = (Path(__file__).parent.parent).resolve()
-    DATA_DIR = ROOT_DIR.joinpath("data")
-    TRAIN_DATA = DATA_DIR.joinpath("training.csv")
-    TEST_DATA = DATA_DIR.joinpath("test.csv")
-    verify_paths(ROOT_DIR, TRAIN_DATA, TEST_DATA)
-
-    DB_DIR = ROOT_DIR.joinpath("db")
-    if not DB_DIR.exists():
-        os.mkdir(DB_DIR)
-
-    TRAIN_DB = DB_DIR.joinpath("training.db")
-    TEST_DB = DB_DIR.joinpath("test.db")
-
-    return TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB
-
-
-def verify_paths(root_dir, train_data, test_data):
-    if not root_dir.is_dir():
-        print(
-            "Terminating, root directory does not exist or is not a directory {0}".format(
-                root_dir
-            )
-        )
-        exit()
-
-    if not train_data.is_file():
-        print(
-            "Terminating, Training data csv file doe not exist or is not a file {0}".format(
-                train_data
-            )
-        )
-        exit()
-
-    if not test_data.is_file():
-        print(
-            "Terminating, Test data csv file doe not exist or is not a file {0}".format(
-                test_data
-            )
-        )
-        exit()
-
-
-def display_image(png_string):
-    # im = Image.open(io.BytesIO(df.iloc[0]['png_image']))
-    im = Image.open(io.BytesIO(png_string))
-    im.show()
+from data.path_utils import get_paths
+from db.image_utils import load_image_data
 
 
 def create_duplicate_image_view(sqcur):
@@ -140,13 +88,13 @@ def main():
 
     args = parser.parse_args()
 
-    TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB = get_paths()
+    TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH = get_paths()
 
-    verify_db(TRAIN_DB, args.enable_overwrite)
-    create_db(TRAIN_DATA, TRAIN_DB)
+    verify_db(TRAIN_DB_PATH, args.enable_overwrite)
+    create_db(TRAIN_DATA_PATH, TRAIN_DB_PATH)
 
-    verify_db(TEST_DB, args.enable_overwrite)
-    create_db(TEST_DATA, TEST_DB)
+    verify_db(TEST_DB_PATH, args.enable_overwrite)
+    create_db(TEST_DATA_PATH, TEST_DB_PATH)
 
 
 if __name__ == "__main__":
