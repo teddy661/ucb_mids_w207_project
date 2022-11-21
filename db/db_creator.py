@@ -88,7 +88,7 @@ def main():
 
     args = parser.parse_args()
 
-    TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH = get_paths()
+    TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH, _ = get_paths()
 
     verify_db(TRAIN_DB_PATH, args.enable_overwrite)
     create_db(TRAIN_DATA_PATH, TRAIN_DB_PATH)

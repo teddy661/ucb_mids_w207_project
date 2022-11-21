@@ -13,8 +13,8 @@ IMAGE_PER_ROW = 10
 
 
 def main():
-    TRAIN_DATA, TEST_DATA, TRAIN_DB, TEST_DB = get_paths()
-    sqcon, sqcur = dba.get_con_and_cursor(TRAIN_DB)
+    _, _, TRAIN_DB_PATH, _, _ = get_paths()
+    sqcon, sqcur = dba.get_con_and_cursor(TRAIN_DB_PATH)
 
     #### Missing features
     data_cols = dba.get_data_column_names(sqcur)

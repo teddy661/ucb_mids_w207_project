@@ -14,10 +14,14 @@ def get_paths() -> tuple:
     if not DB_DIR.exists():
         os.mkdir(DB_DIR)
 
+    MODEL_PATH = Path(r"../facial-keypoints-detection/model_saves").resolve()
+    if not MODEL_PATH.is_dir():
+        MODEL_PATH.mkdir(parents=True, exist_ok=True)
+
     TRAIN_DB_PATH = DB_DIR.joinpath("training.db")
     TEST_DB_PATH = DB_DIR.joinpath("test.db")
 
-    return TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH
+    return TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH, MODEL_PATH
 
 
 def verify_paths(root_dir, train_data_path, test_data_path):

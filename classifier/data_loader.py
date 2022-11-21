@@ -20,7 +20,7 @@ def load_data(
     X_train, X_val, y_train, y_val, X_test
     """
 
-    _, _, TRAIN_DB_PATH, TEST_DB_PATH = get_paths()
+    _, _, TRAIN_DB_PATH, TEST_DB_PATH, _ = get_paths()
     np.random.seed(1234)
 
     sqcon, sqcur = dba.get_con_and_cursor(TRAIN_DB_PATH)
