@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 
-def get_paths() -> tuple:
+def get_paths() -> tuple[Path, Path, Path, Path, Path]:
 
     ROOT_DIR = (Path(__file__).parent.parent).resolve()
     DATA_DIR = ROOT_DIR.joinpath("data")

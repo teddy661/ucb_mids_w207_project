@@ -91,8 +91,8 @@ for index, row in lots_of_nothing_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-#plt.show()
-processed_train_df = train_df.drop(train_df[train_df['max_gray_count'] >= 1600].index)
+# plt.show()
+processed_train_df = train_df.drop(train_df[train_df["max_gray_count"] >= 1600].index)
 
 print(train_df["delta_eye_centers_x"].describe())
 low_eye_x_distance_images = train_df.loc[train_df["delta_eye_centers_x"] <= 20]
@@ -105,8 +105,11 @@ for index, row in low_eye_x_distance_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-#plt.show()
-processed_train_df.drop(processed_train_df[processed_train_df['delta_eye_centers_x'] <= 20].index, inplace=True)
+# plt.show()
+processed_train_df.drop(
+    processed_train_df[processed_train_df["delta_eye_centers_x"] <= 20].index,
+    inplace=True,
+)
 
 print(train_df["delta_eye_centers_y"].describe())
 big_eye_y_distance_images = train_df.loc[
@@ -120,7 +123,7 @@ for index, row in big_eye_y_distance_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-#plt.show()
+# plt.show()
 
 
 print(train_df["gray_levels"].describe())
@@ -135,7 +138,18 @@ for index, row in low_gray_count_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-#plt.show()
-processed_train_df.drop(processed_train_df[processed_train_df['gray_levels'] <= 110].index, inplace=True)
-processed_train_df.drop(columns=["image_as_np", "gray_levels", "max_gray_count", "delta_eye_centers_x", "delta_eye_centers_y"], inplace=True)
+# plt.show()
+processed_train_df.drop(
+    processed_train_df[processed_train_df["gray_levels"] <= 110].index, inplace=True
+)
+processed_train_df.drop(
+    columns=[
+        "image_as_np",
+        "gray_levels",
+        "max_gray_count",
+        "delta_eye_centers_x",
+        "delta_eye_centers_y",
+    ],
+    inplace=True,
+)
 processed_train_df.to_csv(PROCESSED_TRAIN_CSV, index=False, encoding="utf-8")

@@ -27,7 +27,7 @@
       "name": "model-runner",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/model_ed4.py",
+      "program": "${workspaceFolder}/model_joint.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "env": { "PYTHONPATH": "${workspaceRoot}" }
@@ -36,7 +36,7 @@
       "name": "model-tuner",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/model_tuner_ed4.py",
+      "program": "${workspaceFolder}/model_tuner.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       "env": { "PYTHONPATH": "${workspaceRoot}" }
