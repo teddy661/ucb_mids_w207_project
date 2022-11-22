@@ -5,7 +5,6 @@ from tensorflow import keras
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 
-
 Y_COLUMN_NAMES = [
     "left_eye_center_X",
     "left_eye_center_Y",
@@ -42,16 +41,6 @@ Y_COLUMN_NAMES = [
 # variables to define
 model_name = "model"
 point_names = list(set([y_column_name[:-2] for y_column_name in Y_COLUMN_NAMES]))
-
-
-def convert_y_to_dictonary(y_nd):
-    """Converts the y array to a dictionary"""
-
-    y_dict = {}
-    for i, col in enumerate(Y_COLUMN_NAMES):
-        y_dict[col] = y_nd[:, i]
-
-    return y_dict
 
 
 class HyperModelTuner(kt.HyperModel):
@@ -175,3 +164,13 @@ class HyperModelTuner(kt.HyperModel):
             batch_size=hp.Choice("batch_size", [16, 32, 64]),
             **kwargs,
         )
+
+
+def convert_y_to_dictonary(y_nd):
+    """Converts the y array to a dictionary, based on Y_COLUMN_NAMES"""
+
+    y_dict = {}
+    for i, col in enumerate(Y_COLUMN_NAMES):
+        y_dict[col] = y_nd[:, i]
+
+    return y_dict

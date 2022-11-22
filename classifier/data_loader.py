@@ -22,6 +22,8 @@ def load_data(
     X_train, X_val, y_train, y_val, X_test
     """
 
+    # TODO: load from csv instead of db
+    # TODO: remove outliers optionally based on Y names
     _, _, TRAIN_DB_PATH, TEST_DB_PATH, _ = get_paths(remove_outliers)
 
     np.random.seed(1234)
