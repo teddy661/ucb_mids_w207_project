@@ -4,18 +4,18 @@ import numpy as np
 
 
 class KNearestNeighbor(object):
-    """a kNN classifier with L2 distance"""
+    """a kNN model L2 distance"""
 
     def __init__(self):
         """
-        Initialize the KNN classifier.
+        Initialize the KNN model.
         All data is passed via the train() method.
         """
         pass
 
     def train(self, X: np.ndarray, y: np.ndarray) -> None:
         """
-        Train the classifier. For k-nearest neighbors this is just
+        Train the model. For k-nearest neighbors this is just
         memorizing the training data.
 
         Inputs:
@@ -29,7 +29,7 @@ class KNearestNeighbor(object):
 
     def predict(self, X: np.ndarray, k=1) -> np.ndarray:
         """
-        Predict labels for test data using this classifier.
+        Predict labels for test data using this model.
 
         Inputs:
         - X: A numpy array of shape (num_test, D) containing test data consisting

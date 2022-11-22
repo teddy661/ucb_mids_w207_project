@@ -52,6 +52,7 @@ def load_data(
     return X_train, X_val, y_train, y_val, X_test
 
 
+# TODO: make this work with different y names
 def get_clean_data(X, y):
     """Remove all images don't have all 30 labels"""
 

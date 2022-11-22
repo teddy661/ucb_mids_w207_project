@@ -3,9 +3,9 @@ import pickle
 import keras_tuner as kt
 import tensorflow as tf
 
-from classifier.data_loader import load_data
 from data.path_utils import get_paths
-from model_tuner import HyperModelTuner
+from model.data_loader import load_data
+from model.model_tuner import HyperModelTuner
 
 MODEL_NAME = "model_joint"
 

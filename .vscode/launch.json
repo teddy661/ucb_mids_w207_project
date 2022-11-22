@@ -8,7 +8,7 @@
       "name": "data_loader",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/classifier/data_loader.py",
+      "program": "${workspaceFolder}/model/data_loader.py",
       "console": "integratedTerminal",
       "justMyCode": true,
       // we just need to make sure os.getcwd() is the root of the project
