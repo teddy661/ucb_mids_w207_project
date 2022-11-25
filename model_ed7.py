@@ -220,8 +220,17 @@ conv_303 = keras.layers.Conv2D(
     kernel_initializer="he_uniform",
     activation="relu",
 )(conv_302)
+conv_304 = keras.layers.Conv2D(
+    filters=256,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_304",
+    padding="same",
+    kernel_initializer="he_uniform",
+    activation="relu",
+)(conv_303)
 maxp_301 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_301")(
-    conv_303
+    conv_304
 )
 # drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_2)
 norm_301 = keras.layers.BatchNormalization(name="norm_301")(maxp_301)
@@ -253,8 +262,17 @@ conv_403 = keras.layers.Conv2D(
     kernel_initializer="he_uniform",
     activation="relu",
 )(conv_402)
+conv_404 = keras.layers.Conv2D(
+    filters=256,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_404",
+    padding="same",
+    kernel_initializer="he_uniform",
+    activation="relu",
+)(conv_403)
 maxp_401 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_401")(
-    conv_403
+    conv_404
 )
 # drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_2)
 norm_401 = keras.layers.BatchNormalization(name="norm_401")(maxp_401)
@@ -271,15 +289,15 @@ dense_1 = keras.layers.Dense(
 # drop_1 = keras.layers.Dropout(0.20, name="Dropout_1")(dense_1)
 norm_4 = keras.layers.BatchNormalization(name="norm_4")(dense_1)
 
-dense_15 = keras.layers.Dense(
-    2048, name="fc_15", kernel_initializer="he_uniform", activation="relu"
-)(norm_4)
-# drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
-norm_15 = keras.layers.BatchNormalization(name="norm_15")(dense_15)
+#dense_15 = keras.layers.Dense(
+#    4096, name="fc_15", kernel_initializer="he_uniform", activation="relu"
+#)(norm_4)
+## drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
+#norm_15 = keras.layers.BatchNormalization(name="norm_15")(dense_15)
 
 dense_2 = keras.layers.Dense(
     2048, name="fc_2", kernel_initializer="he_uniform", activation="relu"
-)(norm_15)
+)(norm_4)
 # drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
 norm_5 = keras.layers.BatchNormalization(name="norm_5")(dense_2)
 
