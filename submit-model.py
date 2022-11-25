@@ -75,8 +75,7 @@ test_df = pd.read_csv(TEST_CSV, encoding="utf8")
 imgs_all = []
 for idx, r in test_df.iterrows():
     imgs_all.append(
-        np.array(r["Image"].split())
-        .astype(np.int64)
+        np.fromstring(r['Image'], dtype=np.int64, sep=' ')
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
 

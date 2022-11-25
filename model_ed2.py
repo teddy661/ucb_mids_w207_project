@@ -10,7 +10,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 BATCH_SIZE = 32
-ROOT_DIR = Path(r".").resolve()
+ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
