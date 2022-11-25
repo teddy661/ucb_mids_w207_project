@@ -64,27 +64,19 @@ if not MODEL_DIR.is_dir():
 
 train = pd.read_csv(TRAIN_CSV, encoding="utf8")
 classes = train.select_dtypes(include=[np.number]).columns
-
 num_classes = len(classes)
 
-# for col in feature_cols:
-#    col_zscore = col + "_zscore"
-#    train[col_zscore] = (train[col] - train[col].mean())/train[col].std(ddof=0)
-
-###
-
 train_only_all_points = train.dropna()
-mouth_left_corner_points = train[train["mouth_left_corner_x"].notna()]
+y_all = np.array(train_only_all_points[classes])
 
 imgs_all = []
 for idx, r in train_only_all_points.iterrows():
     imgs_all.append(
-        np.array(r["Image"].split())
-        .astype(np.int64)
-        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
+        np.fromstring(r["Image"], dtype=np.int64, sep=" ").reshape(
+            IMAGE_WIDTH, IMAGE_HEIGHT, 1
+        )
     )
 imgs_all = np.array(imgs_all)
-y_all = np.array(train_only_all_points[classes])
 
 
 ###
@@ -112,98 +104,63 @@ rescale = keras.layers.Rescaling(
 ## Begin Convolutional Layers
 ##
 
-conv_1 = keras.layers.Conv2D(
+conv_101 = keras.layers.Conv2D(
     filters=32,
     kernel_size=(3, 3),
     strides=(1, 1),
-    name="conv_1",
+    name="conv_101",
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
 )(rescale)
-conv_2 = keras.layers.Conv2D(
+conv_102 = keras.layers.Conv2D(
     filters=32,
     kernel_size=(3, 3),
     strides=(1, 1),
-    name="conv_2",
+    name="conv_102",
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_1)
-maxp_1 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_1")(
-    conv_2
+)(conv_101)
+maxp_101 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_101")(
+    conv_102
 )
-# drop_1 = keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
-norm_1 = keras.layers.BatchNormalization(name="norm_1")(maxp_1)
+norm_101 = keras.layers.BatchNormalization(name="norm_101")(maxp_101)
 
-conv_3 = keras.layers.Conv2D(
+conv_201 = keras.layers.Conv2D(
     filters=64,
     kernel_size=(3, 3),
     strides=(1, 1),
-    name="conv_3",
+    name="conv_201",
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(norm_1)
-conv_4 = keras.layers.Conv2D(
+)(norm_101)
+conv_202 = keras.layers.Conv2D(
     filters=64,
     kernel_size=(3, 3),
     strides=(1, 1),
-    name="conv_4",
+    name="conv_202",
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_3)
-maxp_2 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_2")(
-    conv_4
+)(conv_201)
+maxp_201 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_201")(
+    conv_202
 )
-# drop_2 = keras.layers.Dropout(0.25, name="Dropout_2")(maxp_2)
-norm_2 = keras.layers.BatchNormalization(name="norm_2")(maxp_2)
-
-conv_5 = keras.layers.Conv2D(
-    filters=128,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    name="conv_5",
-    padding="same",
-    kernel_initializer="he_uniform",
-    activation="relu",
-)(norm_2)
-conv_6 = keras.layers.Conv2D(
-    filters=128,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    name="conv_6",
-    padding="same",
-    kernel_initializer="he_uniform",
-    activation="relu",
-)(conv_5)
-conv_100 = keras.layers.Conv2D(
-    filters=128,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    name="conv_100",
-    padding="same",
-    kernel_initializer="he_uniform",
-    activation="relu",
-)(conv_6)
-maxp_3 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_3")(
-    conv_100
-)
-# drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_2)
-norm_3 = keras.layers.BatchNormalization(name="norm_3")(maxp_3)
+norm_201 = keras.layers.BatchNormalization(name="norm_201")(maxp_201)
 
 conv_301 = keras.layers.Conv2D(
-    filters=256,
+    filters=128,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_301",
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(norm_3)
+)(norm_201)
 conv_302 = keras.layers.Conv2D(
-    filters=256,
+    filters=128,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_302",
@@ -212,7 +169,7 @@ conv_302 = keras.layers.Conv2D(
     activation="relu",
 )(conv_301)
 conv_303 = keras.layers.Conv2D(
-    filters=256,
+    filters=128,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_303",
@@ -221,7 +178,7 @@ conv_303 = keras.layers.Conv2D(
     activation="relu",
 )(conv_302)
 conv_304 = keras.layers.Conv2D(
-    filters=256,
+    filters=128,
     kernel_size=(3, 3),
     strides=(1, 1),
     name="conv_304",
@@ -229,11 +186,10 @@ conv_304 = keras.layers.Conv2D(
     kernel_initializer="he_uniform",
     activation="relu",
 )(conv_303)
-maxp_301 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_301")(
+maxp_301 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_301")(
     conv_304
 )
-# drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_2)
-norm_301 = keras.layers.BatchNormalization(name="norm_301")(maxp_301)
+norm_301 = keras.layers.BatchNormalization(name="norm_3")(maxp_301)
 
 conv_401 = keras.layers.Conv2D(
     filters=256,
@@ -271,35 +227,67 @@ conv_404 = keras.layers.Conv2D(
     kernel_initializer="he_uniform",
     activation="relu",
 )(conv_403)
-maxp_401 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_401")(
+maxp_401 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_401")(
     conv_404
 )
-# drop_3 = keras.layers.Dropout(0.25, name="Dropout_3")(maxp_2)
 norm_401 = keras.layers.BatchNormalization(name="norm_401")(maxp_401)
+
+conv_501 = keras.layers.Conv2D(
+    filters=256,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_501",
+    padding="same",
+    kernel_initializer="he_uniform",
+    activation="relu",
+)(norm_401)
+conv_502 = keras.layers.Conv2D(
+    filters=256,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_502",
+    padding="same",
+    kernel_initializer="he_uniform",
+    activation="relu",
+)(conv_501)
+conv_503 = keras.layers.Conv2D(
+    filters=256,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_503",
+    padding="same",
+    kernel_initializer="he_uniform",
+    activation="relu",
+)(conv_502)
+conv_504 = keras.layers.Conv2D(
+    filters=256,
+    kernel_size=(3, 3),
+    strides=(1, 1),
+    name="conv_504",
+    padding="same",
+    kernel_initializer="he_uniform",
+    activation="relu",
+)(conv_503)
+maxp_501 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_501")(
+    conv_504
+)
+norm_501 = keras.layers.BatchNormalization(name="norm_501")(maxp_501)
 
 
 ##
 ## Begin Fully Connected layers
 ##
 
-flat_1 = keras.layers.Flatten()(norm_401)
+flat_1 = keras.layers.Flatten()(norm_501)
 dense_1 = keras.layers.Dense(
     2048, name="fc_1", kernel_initializer="he_uniform", activation="relu"
 )(flat_1)
-# drop_1 = keras.layers.Dropout(0.20, name="Dropout_1")(dense_1)
-norm_4 = keras.layers.BatchNormalization(name="norm_4")(dense_1)
-
-#dense_15 = keras.layers.Dense(
-#    4096, name="fc_15", kernel_initializer="he_uniform", activation="relu"
-#)(norm_4)
-## drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
-#norm_15 = keras.layers.BatchNormalization(name="norm_15")(dense_15)
+norm_4 = keras.layers.BatchNormalization(name="fc1_norm_4")(dense_1)
 
 dense_2 = keras.layers.Dense(
     2048, name="fc_2", kernel_initializer="he_uniform", activation="relu"
 )(norm_4)
-# drop_2 = keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
-norm_5 = keras.layers.BatchNormalization(name="norm_5")(dense_2)
+norm_5 = keras.layers.BatchNormalization(name="fc2_norm_5")(dense_2)
 
 ##
 ## End Fully Connected Layers
@@ -515,7 +503,8 @@ model.compile(
     },
 )
 model.summary()
-
+tf.keras.utils.plot_model(model, to_file="model_ed7.png", show_shapes=True)
+exit()
 early_stopping = EarlyStopping(
     monitor="val_loss",
     mode="min",
