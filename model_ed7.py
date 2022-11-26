@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -113,6 +113,7 @@ conv_101 = keras.layers.Conv2D(
     kernel_initializer="he_uniform",
     activation="relu",
 )(rescale)
+norm_101 = keras.layers.BatchNormalization(name="norm_101")(conv_101)
 conv_102 = keras.layers.Conv2D(
     filters=32,
     kernel_size=(3, 3),
@@ -121,11 +122,11 @@ conv_102 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_101)
-maxp_101 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_101")(
-    conv_102
+)(norm_101)
+norm_102 = keras.layers.BatchNormalization(name="norm_102")(conv_102)
+maxp_101 = keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="maxp_101")(
+    norm_102
 )
-norm_101 = keras.layers.BatchNormalization(name="norm_101")(maxp_101)
 
 conv_201 = keras.layers.Conv2D(
     filters=64,
@@ -135,7 +136,8 @@ conv_201 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(norm_101)
+)(maxp_101)
+norm_201 = keras.layers.BatchNormalization(name="norm_201")(conv_201)
 conv_202 = keras.layers.Conv2D(
     filters=64,
     kernel_size=(3, 3),
@@ -144,11 +146,11 @@ conv_202 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_201)
-maxp_201 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_201")(
-    conv_202
+)(norm_201)
+norm_202 = keras.layers.BatchNormalization(name="norm_202")(conv_202)
+maxp_201 = keras.layers.MaxPooling2D(pool_size=(2, 2),  padding="same", name="maxp_201")(
+    norm_202
 )
-norm_201 = keras.layers.BatchNormalization(name="norm_201")(maxp_201)
 
 conv_301 = keras.layers.Conv2D(
     filters=128,
@@ -158,7 +160,8 @@ conv_301 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(norm_201)
+)(maxp_201)
+norm_301 = keras.layers.BatchNormalization(name="norm_301")(conv_301)
 conv_302 = keras.layers.Conv2D(
     filters=128,
     kernel_size=(3, 3),
@@ -167,7 +170,8 @@ conv_302 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_301)
+)(norm_301)
+norm_302 = keras.layers.BatchNormalization(name="norm_302")(conv_302)
 conv_303 = keras.layers.Conv2D(
     filters=128,
     kernel_size=(3, 3),
@@ -176,20 +180,12 @@ conv_303 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_302)
-conv_304 = keras.layers.Conv2D(
-    filters=128,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    name="conv_304",
-    padding="same",
-    kernel_initializer="he_uniform",
-    activation="relu",
-)(conv_303)
+)(norm_302)
+norm_303 = keras.layers.BatchNormalization(name="norm_303")(conv_303)
+
 maxp_301 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_301")(
-    conv_304
+    norm_303
 )
-norm_301 = keras.layers.BatchNormalization(name="norm_3")(maxp_301)
 
 conv_401 = keras.layers.Conv2D(
     filters=256,
@@ -199,7 +195,8 @@ conv_401 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(norm_301)
+)(maxp_301)
+norm_401 = keras.layers.BatchNormalization(name="norm_401")(conv_401)
 conv_402 = keras.layers.Conv2D(
     filters=256,
     kernel_size=(3, 3),
@@ -208,7 +205,8 @@ conv_402 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_401)
+)(norm_401)
+norm_402 = keras.layers.BatchNormalization(name="norm_402")(conv_402)
 conv_403 = keras.layers.Conv2D(
     filters=256,
     kernel_size=(3, 3),
@@ -217,20 +215,13 @@ conv_403 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_402)
-conv_404 = keras.layers.Conv2D(
-    filters=256,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    name="conv_404",
-    padding="same",
-    kernel_initializer="he_uniform",
-    activation="relu",
-)(conv_403)
+)(norm_402)
+norm_403 = keras.layers.BatchNormalization(name="norm_403")(conv_403)
+
+
 maxp_401 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_401")(
-    conv_404
+    norm_403
 )
-norm_401 = keras.layers.BatchNormalization(name="norm_401")(maxp_401)
 
 conv_501 = keras.layers.Conv2D(
     filters=256,
@@ -240,7 +231,8 @@ conv_501 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(norm_401)
+)(maxp_401)
+norm_501 = keras.layers.BatchNormalization(name="norm_501")(conv_501)
 conv_502 = keras.layers.Conv2D(
     filters=256,
     kernel_size=(3, 3),
@@ -249,7 +241,8 @@ conv_502 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_501)
+)(norm_501)
+norm_502 = keras.layers.BatchNormalization(name="norm_502")(conv_502)
 conv_503 = keras.layers.Conv2D(
     filters=256,
     kernel_size=(3, 3),
@@ -258,40 +251,30 @@ conv_503 = keras.layers.Conv2D(
     padding="same",
     kernel_initializer="he_uniform",
     activation="relu",
-)(conv_502)
-conv_504 = keras.layers.Conv2D(
-    filters=256,
-    kernel_size=(3, 3),
-    strides=(1, 1),
-    name="conv_504",
-    padding="same",
-    kernel_initializer="he_uniform",
-    activation="relu",
-)(conv_503)
+)(norm_502)
+norm_503 = keras.layers.BatchNormalization(name="norm_503")(conv_503)
+
 maxp_501 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_501")(
-    conv_504
+    norm_503
 )
-norm_501 = keras.layers.BatchNormalization(name="norm_501")(maxp_501)
+
 
 
 ##
 ## Begin Fully Connected layers
 ##
 
-flat_1 = keras.layers.Flatten()(norm_501)
+flat_1 = keras.layers.Flatten()(maxp_501)
 dense_1 = keras.layers.Dense(
     2048, name="fc_1", kernel_initializer="he_uniform", activation="relu"
 )(flat_1)
-norm_4 = keras.layers.BatchNormalization(name="fc1_norm_4")(dense_1)
+norm_fc1 = keras.layers.BatchNormalization(name="norm_fc1")(dense_1)
 
 dense_2 = keras.layers.Dense(
     2048, name="fc_2", kernel_initializer="he_uniform", activation="relu"
-)(norm_4)
-norm_5 = keras.layers.BatchNormalization(name="fc2_norm_5")(dense_2)
+)(norm_fc1)
+norm_fc2 = keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 
-##
-## End Fully Connected Layers
-##
 
 ##
 ## Begin Output Layers
@@ -299,104 +282,104 @@ norm_5 = keras.layers.BatchNormalization(name="fc2_norm_5")(dense_2)
 
 left_eye_center_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Center_X"
-)(norm_5)
+)(norm_fc2)
 left_eye_center_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Center_Y"
-)(norm_5)
+)(norm_fc2)
 
 right_eye_center_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Center_X"
-)(norm_5)
+)(norm_fc2)
 right_eye_center_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Center_Y"
-)(norm_5)
+)(norm_fc2)
 
 left_eye_inner_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Inner_Corner_X"
-)(norm_5)
+)(norm_fc2)
 left_eye_inner_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Inner_Corner_Y"
-)(norm_5)
+)(norm_fc2)
 
 left_eye_outer_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Outer_Corner_X"
-)(norm_5)
+)(norm_fc2)
 left_eye_outer_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eye_Outer_Corner_Y"
-)(norm_5)
+)(norm_fc2)
 
 right_eye_inner_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Inner_Corner_X"
-)(norm_5)
+)(norm_fc2)
 right_eye_inner_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Inner_Corner_Y"
-)(norm_5)
+)(norm_fc2)
 
 right_eye_outer_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Outer_Corner_X"
-)(norm_5)
+)(norm_fc2)
 right_eye_outer_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eye_Outer_Corner_Y"
-)(norm_5)
+)(norm_fc2)
 
 left_eyebrow_inner_end_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Inner_End_X"
-)(norm_5)
+)(norm_fc2)
 left_eyebrow_inner_end_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Inner_End_Y"
-)(norm_5)
+)(norm_fc2)
 
 left_eyebrow_outer_end_x = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Outer_End_X"
-)(norm_5)
+)(norm_fc2)
 left_eyebrow_outer_end_y = keras.layers.Dense(
     units=1, activation=None, name="Left_Eyebrow_Outer_End_Y"
-)(norm_5)
+)(norm_fc2)
 
 right_eyebrow_inner_end_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Inner_End_X"
-)(norm_5)
+)(norm_fc2)
 right_eyebrow_inner_end_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Inner_End_Y"
-)(norm_5)
+)(norm_fc2)
 
 right_eyebrow_outer_end_x = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Outer_End_X"
-)(norm_5)
+)(norm_fc2)
 right_eyebrow_outer_end_y = keras.layers.Dense(
     units=1, activation=None, name="Right_Eyebrow_Outer_End_Y"
-)(norm_5)
+)(norm_fc2)
 
-nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_X")(norm_5)
-nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_Y")(norm_5)
+nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_X")(norm_fc2)
+nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_Y")(norm_fc2)
 
 mouth_left_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Left_Corner_X"
-)(norm_5)
+)(norm_fc2)
 mouth_left_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Left_Corner_Y"
-)(norm_5)
+)(norm_fc2)
 
 mouth_right_corner_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Right_Corner_X"
-)(norm_5)
+)(norm_fc2)
 mouth_right_corner_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Right_Corner_Y"
-)(norm_5)
+)(norm_fc2)
 
 mouth_center_top_lip_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Top_Lip_X"
-)(norm_5)
+)(norm_fc2)
 mouth_center_top_lip_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Top_Lip_Y"
-)(norm_5)
+)(norm_fc2)
 
 mouth_center_bottom_lip_x = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Bottom_Lip_X"
-)(norm_5)
+)(norm_fc2)
 mouth_center_bottom_lip_y = keras.layers.Dense(
     units=1, activation=None, name="Mouth_Center_Bottom_Lip_Y"
-)(norm_5)
+)(norm_fc2)
 
 model = tf.keras.Model(
     inputs=[input_layer],
@@ -436,7 +419,7 @@ model = tf.keras.Model(
 )
 
 model.compile(
-    optimizer=tf.keras.optimizers.Nadam(learning_rate=0.0001),
+    optimizer=tf.keras.optimizers.Adam(),
     loss={
         "Left_Eye_Center_X": "mse",
         "Left_Eye_Center_Y": "mse",
@@ -503,13 +486,14 @@ model.compile(
     },
 )
 model.summary()
+
 tf.keras.utils.plot_model(model, to_file="model_ed7.png", show_shapes=True)
-exit()
+
 early_stopping = EarlyStopping(
     monitor="val_loss",
     mode="min",
     verbose=1,
-    patience=50,
+    patience=20,
     min_delta=0.0001,
     restore_best_weights=True,
 )
@@ -522,6 +506,13 @@ model_checkpoint = ModelCheckpoint(
     save_weights_only=False,
     save_best_only=False,
 )
+
+reduce_lr_on_plateau = ReduceLROnPlateau(
+    monitor='val_loss',
+    patience=4,
+    verbose=1,
+    factor=0.3,
+    min_lr=0.0000001)
 
 history = model.fit(
     x=X_train,
@@ -557,7 +548,7 @@ history = model.fit(
         "Mouth_Center_Bottom_Lip_X": y_train[:, 28],
         "Mouth_Center_Bottom_Lip_Y": y_train[:, 29],
     },
-    epochs=1000,
+    epochs=200,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
@@ -595,8 +586,9 @@ history = model.fit(
         },
     ),
     verbose=2,
+	# callbacks=[early_stopping],
     # callbacks=[early_stopping, model_checkpoint],
-    callbacks=[early_stopping],
+    callbacks=[early_stopping,reduce_lr_on_plateau],
 )
 
 
