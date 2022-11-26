@@ -2,26 +2,32 @@ import os
 from pathlib import Path
 
 
-def get_paths() -> tuple[Path, Path, Path, Path, Path]:
+def get_data_paths() -> tuple[Path, Path, Path]:
 
     ROOT_DIR = (Path(__file__).parent.parent).resolve()
     DATA_DIR = ROOT_DIR.joinpath("data")
+
     TRAIN_DATA_PATH = DATA_DIR.joinpath("training.csv")
     TEST_DATA_PATH = DATA_DIR.joinpath("test.csv")
     verify_paths(ROOT_DIR, TRAIN_DATA_PATH, TEST_DATA_PATH)
 
-    DB_DIR = ROOT_DIR.joinpath("db")
-    if not DB_DIR.exists():
-        os.mkdir(DB_DIR)
-
-    MODEL_PATH = Path(r"../facial-keypoints-detection/model_saves").resolve()
+    MODEL_PATH = ROOT_DIR.joinpath("model_saves").resolve()
     if not MODEL_PATH.is_dir():
         MODEL_PATH.mkdir(parents=True, exist_ok=True)
 
+    return TRAIN_DATA_PATH, TEST_DATA_PATH, MODEL_PATH
+
+
+def get_db_paths() -> tuple[Path, Path]:
+    ROOT_DIR = (Path(__file__).parent.parent).resolve()
+
+    DB_DIR = ROOT_DIR.joinpath("db")
+    if not DB_DIR.exists():
+        os.mkdir(DB_DIR)
     TRAIN_DB_PATH = DB_DIR.joinpath("training.db")
     TEST_DB_PATH = DB_DIR.joinpath("test.db")
 
-    return TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH, MODEL_PATH
+    return TRAIN_DB_PATH, TEST_DB_PATH
 
 
 def verify_paths(root_dir, train_data_path, test_data_path):

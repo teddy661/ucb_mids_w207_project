@@ -1,31 +1,54 @@
+import os
 import pickle
 
 import keras_tuner as kt
 import tensorflow as tf
 
-from data.path_utils import get_paths
-from model.data_loader import load_data
-from model.model_tuner import HyperModelTuner
+import data.path_utils as path_utils
+import model.data_loader as data_loader
+from model.model_tuner import FaceKeyPointModelTuner
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+tf.get_logger().setLevel("INFO")
+tf.random.set_seed(1234)
 
 MODEL_NAME = "model_joint"
+"""
+This is a model that predicts all 15 keypoints using one model. 
+"""
+LABELS_TO_INCLUDE = [
+    "left_eye_center",
+    "right_eye_center",
+    "nose_tip",
+    "left_eye_inner_corner",
+    "left_eye_outer_corner",
+    "left_eyebrow_inner_end",
+    "left_eyebrow_outer_end",
+    "right_eye_inner_corner",
+    "right_eye_outer_corner",
+    "right_eyebrow_inner_end",
+    "right_eyebrow_outer_end",
+    "mouth_left_corner",
+    "mouth_right_corner",
+    "mouth_center_top_lip",
+    "mouth_center_bottom_lip",
+]
 
-_, _, _, _, MODEL_PATH = get_paths()
+_, _, MODEL_PATH = path_utils.get_data_paths()
 
 ## Data Preprocessing
-# TODO: put this part into the model.fit() function
 
-tf.random.set_seed(1234)
-X_train, X_val, y_train, y_val, X_test = load_data(get_clean=True)
+TRAIN_DATA_PATH, TEST_DATA_PATH, MODEL_PATH = path_utils.get_data_paths()
 
-print(f"X_train shape: {X_train.shape}")
-print(f"y_train shape: {y_train.shape}")
-print(f"X_val shape: {X_val.shape}")
-print(f"y_val shape: {y_val.shape}")
-print(f"X_test shape: {X_test.shape}")
-
+X_train, X_val, y_train, y_val, X_test = data_loader.load_data_from_file(
+    TRAIN_DATA_PATH,
+    TEST_DATA_PATH,
+    labels_to_include=LABELS_TO_INCLUDE,
+    get_clean=True,
+)
 
 tuner = kt.Hyperband(
-    HyperModelTuner(),
+    FaceKeyPointModelTuner(labels=LABELS_TO_INCLUDE, name=MODEL_NAME),
     objective="val_loss",
     max_trials=5,
     executions_per_trial=2,
@@ -36,37 +59,27 @@ tuner = kt.Hyperband(
 
 tuner.search_space_summary()
 
-early_stopping = tf.keras.callbacks.EarlyStopping(
-    monitor="val_loss",
-    mode="min",
-    verbose=2,
-    patience=50,
-    min_delta=0.0001,
-    restore_best_weights=True,
-)
-
-# model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-#     "model_checkpoints/{epoch:04d}-{val_loss:.2f}",
-#     monitor="val_loss",
-#     mode="min",
-#     verbose=1,
-#     save_weights_only=False,
-#     save_best_only=False,
-# )
-
 tuner.search(
     X_train,
     y_train,
     epochs=1,
     validation_data=(X_val, y_val),
     verbose=2,
-    callbacks=[early_stopping],
 )
 
-model: tf.keras.Model = tuner.get_best_models(num_models=1)[0]  # this is the best model
-model.summary()
+tuner.results_summary()
 
-# with open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), "wb") as history_file:
-#     pickle.dump(history.history, history_file, protocol=pickle.HIGHEST_PROTOCOL)
+# get the best hyperparameters, and re-train the model
+best_hp = tuner.get_best_hyperparameters()[0].values
+model = tuner.hypermodel.build(best_hp)
+history: tf.keras.callbacks.History = tuner.hypermodel.fit(
+    X_train, y_train, epochs=100, validation_data=(X_val, y_val)
+)
+
+# model: tf.keras.Model = tuner.get_best_models(num_models=1)[0]  # this is the best model
+# model.summary()
+
+with open(MODEL_PATH.joinpath(MODEL_NAME + "_history"), "wb") as history_file:
+    pickle.dump(history.history, history_file, protocol=pickle.HIGHEST_PROTOCOL)
 
 model.save(MODEL_PATH.joinpath(MODEL_NAME), overwrite=True)

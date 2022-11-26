@@ -3,8 +3,8 @@ import os
 import sqlite3
 from pathlib import Path
 
-from data.path_utils import get_paths
-from db.image_utils import load_image_data
+import data.path_utils as path_utils
+import db.image_utils as image_utils
 
 
 def create_duplicate_image_view(sqcur):
@@ -33,7 +33,7 @@ def create_duplicate_image_view(sqcur):
 
 
 def create_db(data_path, db_path):
-    df = load_image_data(data_path)
+    df = image_utils.load_image_data(data_path)
 
     sqcon = sqlite3.connect(db_path)
 
@@ -88,7 +88,8 @@ def main():
 
     args = parser.parse_args()
 
-    TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_DB_PATH, TEST_DB_PATH, _ = get_paths()
+    TRAIN_DATA_PATH, TEST_DATA_PATH, _ = path_utils.get_data_paths()
+    TRAIN_DB_PATH, TEST_DB_PATH = path_utils.get_db_paths()
 
     verify_db(TRAIN_DB_PATH, args.enable_overwrite)
     create_db(TRAIN_DATA_PATH, TRAIN_DB_PATH)
