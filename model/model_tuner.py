@@ -6,12 +6,13 @@ import tensorflow as tf
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 tf.get_logger().setLevel("INFO")
+tf.random.set_seed(1234)
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 
 # don't change the order of this list, to be consistent with the csv file
-Y_COLUMN_NAMES = [
+ALL_Y_COLUMNS = [
     "left_eye_center_X",
     "left_eye_center_Y",
     "right_eye_center_X",
@@ -65,12 +66,14 @@ ALL_LABELS = [
 
 class FaceKeyPointModelTuner(kt.HyperModel):
     """
-    HyperModel for the facial recognition models
+    HyperModel for the facial recognition models.
+
+    Some doc: https://keras.io/guides/keras_tuner/getting_started/#tune-model-training
     """
 
-    def __init__(self, labels: list[str], name=None, tunable=True):
+    def __init__(self, labels, name=None, tunable=True):
         super().__init__(name, tunable)
-        self.labels = labels
+        self.labels: list[str] = labels
 
     def build_model(self, hp: kt.HyperParameters) -> tf.keras.Model:
         """
@@ -181,7 +184,16 @@ class FaceKeyPointModelTuner(kt.HyperModel):
 
         return model
 
-    def fit(self, hp:kt.HyperParameters, model:tf.keras.models.Model, x, y, validation_data, *args, **kwargs):
+    def fit(
+        self,
+        hp: kt.HyperParameters,
+        model: tf.keras.models.Model,
+        x,
+        y,
+        validation_data,
+        *args,
+        **kwargs
+    ):
 
         x_val, y_val = validation_data
         y = self.convert_y_to_dictonary(y)
@@ -226,9 +238,7 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         """
 
         y_dict = {}
-        for i, col in enumerate(Y_COLUMN_NAMES):
+        for i, col in enumerate(ALL_Y_COLUMNS):
             if col[:-2] in self.labels:
-                y_dict[col] = y_array[:, i]
-        return y_dict
                 y_dict[col] = y_array[:, i]
         return y_dict

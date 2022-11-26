@@ -36,14 +36,17 @@ LABELS_TO_INCLUDE = [
 
 _, _, MODEL_PATH = path_utils.get_data_paths()
 
+y_columns_to_include = []
+for lable in LABELS_TO_INCLUDE:
+    y_columns_to_include.append(lable + "_X", lable + "_Y")
+
 ## Data Preprocessing
 
 TRAIN_DATA_PATH, TEST_DATA_PATH, MODEL_PATH = path_utils.get_data_paths()
-
 X_train, X_val, y_train, y_val, X_test = data_loader.load_data_from_file(
     TRAIN_DATA_PATH,
     TEST_DATA_PATH,
-    labels_to_include=LABELS_TO_INCLUDE,
+    y_columns=y_columns_to_include,
     get_clean=True,
 )
 
