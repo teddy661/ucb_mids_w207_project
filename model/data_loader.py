@@ -49,7 +49,7 @@ def load_data_from_db(
 def load_data_from_file(
     train_data_path: Path,
     test_data_path: Path,
-    y_columns: list[str],
+    y_columns: list,
     train_val_split=0.8,
 ) -> tuple:
 
@@ -64,17 +64,10 @@ def load_data_from_file(
     train_raw = pd.read_csv(train_data_path, encoding="utf8")
     train_clean = clean_up_data(train_raw, y_columns)
 
-    # todo: better way of doing this
-    train_x_array = []
-    for idx, r in train_clean.iterrows():
-        train_x_array.append(
-            np.array(r["Image"].split())
-            .astype(np.int64)
-            .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
-        )
-
-    train_x_array = np.array(train_x_array)
-    train_y_array = np.array(train_clean[y_columns].values)
+    train_x_array = np.stack(
+        [np.asarray(p.split()) for p in train_clean["Image"]]
+    ).astype("float32")
+    train_y_array = np.asarray(train_clean[y_columns].values)
 
     # shuffle and split
     shuffled_indices = np.random.permutation(range(len(train_y_array)))
@@ -88,21 +81,14 @@ def load_data_from_file(
 
     test_raw = pd.read_csv(test_data_path, encoding="utf8")
     test_clean = clean_up_data(test_raw, y_columns)
-
-    # todo: better way of doing this
-    test_x_array = []
-    for idx, r in test_clean.iterrows():
-        test_x_array.append(
-            np.array(r["Image"].split())
-            .astype(np.int64)
-            .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
-        )
-    X_test = np.array(test_x_array)
+    X_test = np.stack([np.asarray(p.split()) for p in test_clean["Image"]]).astype(
+        "float32"
+    )
 
     return X_train, X_val, y_train, y_val, X_test
 
 
-def clean_up_data(raw: pd.DataFrame, y_columns: list[str]) -> pd.DataFrame:
+def clean_up_data(raw: pd.DataFrame, y_columns: list) -> pd.DataFrame:
     """
     Filter only for columns we care about, then drop NA
     """
