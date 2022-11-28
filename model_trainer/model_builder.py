@@ -44,23 +44,51 @@ def tune_model(labels_to_include, model_name) -> tf.keras.Model:
 
     tuner.search_space_summary()
 
+    callbacks = []
+    early_stopping = tf.keras.callbacks.EarlyStopping(
+        monitor="val_loss",
+        mode="min",
+        verbose=1,
+        patience=20,
+        min_delta=0.0001,
+        restore_best_weights=True,
+    )
+    callbacks.append(early_stopping)
+
+    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+        "model_checkpoints/{epoch:04d}-{val_loss:.2f}",
+        monitor="val_loss",
+        mode="min",
+        verbose=1,
+        save_weights_only=False,
+        save_best_only=False,
+    )
+    # callbacks.append(model_checkpoint)
+
+    reduce_lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss", patience=5, verbose=1, factor=0.3, min_lr=0.0000001
+    )
+    callbacks.append(reduce_lr_on_plateau)
+
     tuner.search(
         X_train,
         y_train,
         validation_data=(X_val, y_val),
-        verbose=1,
+        callbacks=callbacks,
+        verbose=0,
     )
 
     # get the best hyperparameters, and re-train the model
     best_hp = tuner.get_best_hyperparameters()[0]
-    print(best_hp)
+    print(best_hp.values)
 
     model = tuner.hypermodel.build(best_hp)
-    history: tf.keras.callbacks.History = tuner.hypermodel.fit(
+    history: tf.keras.callbacks.History = model.fit(
         x=X_train,
         y=y_train,
-        validation_data=(X_val, y_val),
         epochs=100,
+        validation_data=(X_val, y_val),
+        callbacks=callbacks,
     )
 
     # model: tf.keras.Model = tuner.get_best_models(num_models=1)[0]  # this is the best model

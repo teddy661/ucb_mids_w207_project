@@ -213,34 +213,6 @@ class FaceKeyPointHyperModel(kt.HyperModel):
         y_val = self.convert_y_to_dictonary(y_val)
         validation_data = (x_val, y_val)
 
-        # define callbacks
-
-        callbacks = kwargs["callbacks"]
-        early_stopping = tf.keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            mode="min",
-            verbose=1,
-            patience=20,
-            min_delta=0.0001,
-            restore_best_weights=True,
-        )
-        callbacks.append(early_stopping)
-
-        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-            "model_checkpoints/{epoch:04d}-{val_loss:.2f}",
-            monitor="val_loss",
-            mode="min",
-            verbose=1,
-            save_weights_only=False,
-            save_best_only=False,
-        )
-        # callbacks.append(model_checkpoint)
-
-        reduce_lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
-            monitor="val_loss", patience=5, verbose=1, factor=0.3, min_lr=0.0000001
-        )
-        callbacks.append(reduce_lr_on_plateau)
-
         return model.fit(
             *args,
             x=x,
