@@ -72,7 +72,7 @@ y_all = np.array(train_only_all_points[classes])
 imgs_all = []
 for idx, r in train_only_all_points.iterrows():
     imgs_all.append(
-        np.fromstring(r["Image"], dtype=np.int64, sep=" ").reshape(
+        np.fromstring(r["Image"], dtype=np.uint8, sep=" ").reshape(
             IMAGE_WIDTH, IMAGE_HEIGHT, 1
         )
     )

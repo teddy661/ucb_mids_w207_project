@@ -213,7 +213,7 @@ imgs_all = []
 for idx, r in test_df.iterrows():
     imgs_all.append(
         np.array(r["Image"].split())
-        .astype(np.int64)
+        .astype(np.uint8)
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
 
