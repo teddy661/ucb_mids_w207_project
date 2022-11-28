@@ -57,7 +57,7 @@ if not TRAIN_CSV.is_file():
 def int_string_to_numpy(int_string):
     return (
         np.array(int_string.split())
-        .astype(np.int64)
+        .astype(np.uint8)
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
 
