@@ -14,7 +14,7 @@ ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "facial-keypoints-left-eye-inner-corner"
+FINAL_MODEL_NAME = "facial-keypoints-left-eye-center"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
@@ -66,7 +66,7 @@ train = pd.read_csv(TRAIN_CSV, encoding="utf8")
 classes = train.select_dtypes(include=[np.number]).columns
 num_classes = len(classes)
 
-train_only_all_points = train[train["left_eye_inner_corner_x"].notna()]
+train_only_all_points = train[train["left_eye_center_x"].notna()]
 y_all = np.array(train_only_all_points[classes])
 
 imgs_all = []
@@ -279,19 +279,19 @@ norm_fc2 = keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 ## Begin Output Layers
 ##
 
-left_eye_inner_corner_x = keras.layers.Dense(
-    units=1, activation=None, name="Left_Eye_Inner_Corner_X"
+left_eye_center_x = keras.layers.Dense(
+    units=1, activation=None, name="Left_Eye_Center_x"
 )(norm_fc2)
-left_eye_inner_corner_y = keras.layers.Dense(
-    units=1, activation=None, name="Left_Eye_Inner_Corner_Y"
+left_eye_center_y = keras.layers.Dense(
+    units=1, activation=None, name="Left_Eye_Center_y"
 )(norm_fc2)
 
 
 model = tf.keras.Model(
     inputs=[input_layer],
     outputs=[
-        left_eye_inner_corner_x,
-        left_eye_inner_corner_y,
+        left_eye_center_x,
+        left_eye_center_y,
     ],
     name=FINAL_MODEL_NAME,
 )
@@ -299,12 +299,12 @@ model = tf.keras.Model(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss={
-        "Left_Eye_Inner_Corner_X": "mse",
-        "Left_Eye_Inner_Corner_Y": "mse",
+        "Left_Eye_Center_x": "mse",
+        "Left_Eye_Center_y": "mse",
     },
     metrics={
-        "Left_Eye_Inner_Corner_X": "mse",
-        "Left_Eye_Inner_Corner_Y": "mse",
+        "Left_Eye_Center_x": "mse",
+        "Left_Eye_Center_y": "mse",
     },
 )
 model.summary()
@@ -336,16 +336,16 @@ reduce_lr_on_plateau = ReduceLROnPlateau(
 history = model.fit(
     x=X_train,
     y={
-        "Left_Eye_Inner_Corner_X": y_train[:, 4],
-        "Left_Eye_Inner_Corner_Y": y_train[:, 5],
+        "Left_Eye_Center_x": y_train[:, 0],
+        "Left_Eye_Center_y": y_train[:, 1],
     },
     epochs=200,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
         {
-            "Left_Eye_Inner_Corner_X": y_val[:, 4],
-            "Left_Eye_Inner_Corner_Y": y_val[:, 5],
+            "Left_Eye_Center_x": y_val[:, 0],
+            "Left_Eye_Center_y": y_val[:, 1],
         },
     ),
     verbose=2,

@@ -13,36 +13,36 @@ IMAGE_WIDTH = 96
 
 # don't change the order of this list, to be consistent with the csv file
 ALL_Y_COLUMNS = [
-    "left_eye_center_X",
-    "left_eye_center_Y",
-    "right_eye_center_X",
-    "right_eye_center_Y",
-    "left_eye_inner_corner_X",
-    "left_eye_inner_corner_Y",
-    "left_eye_outer_corner_X",
-    "left_eye_outer_corner_Y",
-    "right_eye_inner_corner_X",
-    "right_eye_inner_corner_Y",
-    "right_eye_outer_corner_X",
-    "right_eye_outer_corner_Y",
-    "left_eyebrow_inner_end_X",
-    "left_eyebrow_inner_end_Y",
-    "left_eyebrow_outer_end_X",
-    "left_eyebrow_outer_end_Y",
-    "right_eyebrow_inner_end_X",
-    "right_eyebrow_inner_end_Y",
-    "right_eyebrow_outer_end_X",
-    "right_eyebrow_outer_end_Y",
-    "nose_tip_X",
-    "nose_tip_Y",
-    "mouth_left_corner_X",
-    "mouth_left_corner_Y",
-    "mouth_right_corner_X",
-    "mouth_right_corner_Y",
-    "mouth_center_top_lip_X",
-    "mouth_center_top_lip_Y",
-    "mouth_center_bottom_lip_X",
-    "mouth_center_bottom_lip_Y",
+    "left_eye_center_x",
+    "left_eye_center_y",
+    "right_eye_center_x",
+    "right_eye_center_y",
+    "left_eye_inner_corner_x",
+    "left_eye_inner_corner_y",
+    "left_eye_outer_corner_x",
+    "left_eye_outer_corner_y",
+    "right_eye_inner_corner_x",
+    "right_eye_inner_corner_y",
+    "right_eye_outer_corner_x",
+    "right_eye_outer_corner_y",
+    "left_eyebrow_inner_end_x",
+    "left_eyebrow_inner_end_y",
+    "left_eyebrow_outer_end_x",
+    "left_eyebrow_outer_end_y",
+    "right_eyebrow_inner_end_x",
+    "right_eyebrow_inner_end_y",
+    "right_eyebrow_outer_end_x",
+    "right_eyebrow_outer_end_y",
+    "nose_tip_x",
+    "nose_tip_y",
+    "mouth_left_corner_x",
+    "mouth_left_corner_y",
+    "mouth_right_corner_x",
+    "mouth_right_corner_y",
+    "mouth_center_top_lip_x",
+    "mouth_center_top_lip_y",
+    "mouth_center_bottom_lip_x",
+    "mouth_center_bottom_lip_y",
 ]
 
 ALL_LABELS = [
@@ -64,7 +64,7 @@ ALL_LABELS = [
 ]
 
 
-class FaceKeyPointModelTuner(kt.HyperModel):
+class FaceKeyPointHyperModel(kt.HyperModel):
     """
     HyperModel for the facial recognition models.
 
@@ -75,7 +75,7 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         super().__init__(name, tunable)
         self.labels: list[str] = labels
 
-    def build_model(self, hp: kt.HyperParameters) -> tf.keras.Model:
+    def build(self, hp: kt.HyperParameters) -> tf.keras.Model:
         """
         Builds the model with the hyperparameters, used by the tuner later
         """
@@ -92,66 +92,81 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         prev_layer = rescale
         for cur_con_layer in range(hp.Int("num_conv_layers", 3, 5)):
 
-            filter_size = hp.Int("filter_size", 32, 128, 32)
-            kernel_size = hp.Int("kernel_size", 3, 5, 2)
+            # some defaults after tuning
+            filter_size = 64  # hp.Int("filter_size", 32, 64, 32)
+            kernel_size = 3  # hp.Int("kernel_size", 3, 5, 2)
+            # if hp.Boolean("increasing_filter_size"):
+            filter_size = filter_size * (cur_con_layer + 1)
 
             conv_1 = tf.keras.layers.Conv2D(
                 filters=filter_size,
                 kernel_size=kernel_size,
                 strides=(1, 1),
-                name="conv_1st_" + str(cur_con_layer),
+                name=f"conv_1st_{str(cur_con_layer)}",
                 padding="same",
                 kernel_initializer="he_uniform",
                 activation="relu",
             )(prev_layer)
 
+            norm_1 = tf.keras.layers.BatchNormalization(
+                name=f"norm_1st_{str(cur_con_layer)}",
+            )(conv_1)
+
             conv_2 = tf.keras.layers.Conv2D(
                 filters=filter_size,
                 kernel_size=kernel_size,
                 strides=(1, 1),
-                name="conv_2nd_" + str(cur_con_layer),
+                name=f"conv_2nd_{str(cur_con_layer)}",
                 padding="same",
                 kernel_initializer="he_uniform",
                 activation="relu",
-            )(conv_1)
+            )(norm_1)
 
-            maxp = tf.keras.layers.MaxPooling2D(
-                pool_size=(2, 2), padding="same", name="pool_" + str(cur_con_layer)
+            norm_2 = tf.keras.layers.BatchNormalization(
+                name=f"norm_2nd_{str(cur_con_layer)}",
             )(conv_2)
 
-            # drop_1 =tf.keras.layers.Dropout(0.25, name="Dropout_1")(maxp_1)
-            norm = tf.keras.layers.BatchNormalization(
-                name="norm_" + str(cur_con_layer)
-            )(maxp)
+            maxp = tf.keras.layers.MaxPooling2D(
+                pool_size=(2, 2),
+                padding="same",
+                name=f"mpool_{str(cur_con_layer)}",
+            )(norm_2)
 
-            prev_layer = norm
+            if hp.Boolean("dropout"):
+                dropout = tf.keras.layers.Dropout(
+                    rate=0.25,
+                    name=f"dropout_{str(cur_con_layer)}",
+                )(maxp)
+                prev_layer = dropout
+            else:
+                prev_layer = maxp
 
         ## Fully Connected layers
 
         flat_1 = tf.keras.layers.Flatten()(prev_layer)
+
+        fc_units = hp.Choice("fc_units", [1024, 2048, 4096])
         dense_1 = tf.keras.layers.Dense(
-            hp.Int("fc1_units", 512, 1024, 512),
+            fc_units,
             name="fc_1",
             kernel_initializer="he_uniform",
-            activation="elu",
+            activation="relu",
         )(flat_1)
-        # drop_1 =tf.keras.layers.Dropout(0.20, name="Dropout_1")(dense_1)
-        norm_100 = tf.keras.layers.BatchNormalization(name="norm_100")(dense_1)
+        norm_fc1 = tf.keras.layers.BatchNormalization(name="norm_fc1")(dense_1)
+
+        if hp.Boolean("decreasing_fc_units"):
+            fc_units = fc_units // 2
 
         dense_2 = tf.keras.layers.Dense(
-            hp.Int("fc2_units", 256, 1024, 256),
+            fc_units,
             name="fc_2",
             kernel_initializer="he_uniform",
-            activation="elu",
-        )(norm_100)
-        # drop_2 =tf.keras.layers.Dropout(0.20, name="Dropout_2")(dense_2)
-        norm_101 = tf.keras.layers.BatchNormalization(name="norm_101")(dense_2)
-
-        ##
-        ## End Fully Connected Layers
-        ##
+            activation="relu",
+        )(norm_fc1)
+        norm_fc2 = tf.keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 
         ## Construct Output Layers, loss and metrics
+
         output_layers = []
         loss_dict = {}
         metrics_dict = {}
@@ -163,7 +178,7 @@ class FaceKeyPointModelTuner(kt.HyperModel):
                         units=1,
                         activation=None,
                         name=label + coord,
-                    )(norm_101)
+                    )(norm_fc2)
                 )
                 loss_dict[label + coord] = "mse"
                 metrics_dict[label + coord] = "mae"
@@ -175,9 +190,7 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         )
 
         model.compile(
-            optimizer=tf.keras.optimizers.Nadam(
-                learning_rate=hp.Choice("lr", 1e-4, 1e-3)
-            ),
+            optimizer=tf.keras.optimizers.Adam(),
             loss=loss_dict,
             metrics=metrics_dict,
         )
@@ -192,7 +205,7 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         y,
         validation_data,
         *args,
-        **kwargs
+        **kwargs,
     ):
 
         x_val, y_val = validation_data
@@ -201,16 +214,17 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         validation_data = (x_val, y_val)
 
         # define callbacks
-        # based on Ed, early stopping proves to be the best option
-        # not going to tune it anymore for now
+
+        callbacks = kwargs["callbacks"]
         early_stopping = tf.keras.callbacks.EarlyStopping(
             monitor="val_loss",
             mode="min",
-            verbose=2,
-            patience=hp.Int("patience", 10, 20, 50),
+            verbose=1,
+            patience=20,
             min_delta=0.0001,
             restore_best_weights=True,
         )
+        callbacks.append(early_stopping)
 
         model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
             "model_checkpoints/{epoch:04d}-{val_loss:.2f}",
@@ -220,14 +234,19 @@ class FaceKeyPointModelTuner(kt.HyperModel):
             save_weights_only=False,
             save_best_only=False,
         )
+        # callbacks.append(model_checkpoint)
+
+        reduce_lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss", patience=5, verbose=1, factor=0.3, min_lr=0.0000001
+        )
+        callbacks.append(reduce_lr_on_plateau)
 
         return model.fit(
             *args,
             x=x,
             y=y,
             validation_data=validation_data,
-            batch_size=hp.Choice("batch_size", [16, 32, 64]),
-            callbacks=[early_stopping],
+            batch_size=32,  # hp.Choice("batch_size", [32, 64]),
             **kwargs,
         )
 
@@ -238,7 +257,11 @@ class FaceKeyPointModelTuner(kt.HyperModel):
         """
 
         y_dict = {}
+        y_ind = 0
+
+        # have to loop through ALL_Y_COLUMNS, as the order might be wrong in self.labels
         for i, col in enumerate(ALL_Y_COLUMNS):
             if col[:-2] in self.labels:
-                y_dict[col] = y_array[:, i]
+                y_dict[col] = y_array[:, y_ind]
+                y_ind += 1
         return y_dict

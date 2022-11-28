@@ -135,7 +135,7 @@ mouth_center_bottom_lip_model.trainable = False
 
 # merged = tf.keras.Model(
 #    inputs=[left_eye_center_model.get_layer("InputLayer")],
-#    outputs=[left_eye_center_model.get_layer("Left_Eye_Center_X")],
+#    outputs=[left_eye_center_model.get_layer("Left_Eye_Center_x")],
 # )
 
 # inputlayer=right_eye_center_model.get_layer("InputLayer")

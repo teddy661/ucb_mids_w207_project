@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 
-ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
+ROOT_DIR = (Path(__file__).parent).resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 PROCESSED_TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")

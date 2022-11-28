@@ -14,7 +14,7 @@ ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "facial-keypoints-nose-tip"
+FINAL_MODEL_NAME = "facial-keypoints-right-eyebrow-inner-end"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
@@ -66,7 +66,7 @@ train = pd.read_csv(TRAIN_CSV, encoding="utf8")
 classes = train.select_dtypes(include=[np.number]).columns
 num_classes = len(classes)
 
-train_only_all_points = train[train["nose_tip_x"].notna()]
+train_only_all_points = train[train["right_eyebrow_inner_end_x"].notna()]
 y_all = np.array(train_only_all_points[classes])
 
 imgs_all = []
@@ -279,15 +279,19 @@ norm_fc2 = keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 ## Begin Output Layers
 ##
 
-nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_X")(norm_fc2)
-nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_Y")(norm_fc2)
+right_eyebrow_inner_end_x = keras.layers.Dense(
+    units=1, activation=None, name="Right_Eyebrow_Inner_End_x"
+)(norm_fc2)
+right_eyebrow_inner_end_y = keras.layers.Dense(
+    units=1, activation=None, name="Right_Eyebrow_Inner_End_y"
+)(norm_fc2)
 
 
 model = tf.keras.Model(
     inputs=[input_layer],
     outputs=[
-        nose_tip_x,
-        nose_tip_y,
+        right_eyebrow_inner_end_x,
+        right_eyebrow_inner_end_y,
     ],
     name=FINAL_MODEL_NAME,
 )
@@ -295,12 +299,12 @@ model = tf.keras.Model(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss={
-        "Nose_Tip_X": "mse",
-        "Nose_Tip_Y": "mse",
+        "Right_Eyebrow_Inner_End_x": "mse",
+        "Right_Eyebrow_Inner_End_y": "mse",
     },
     metrics={
-        "Nose_Tip_X": "mse",
-        "Nose_Tip_Y": "mse",
+        "Right_Eyebrow_Inner_End_x": "mse",
+        "Right_Eyebrow_Inner_End_y": "mse",
     },
 )
 model.summary()
@@ -332,16 +336,16 @@ reduce_lr_on_plateau = ReduceLROnPlateau(
 history = model.fit(
     x=X_train,
     y={
-        "Nose_Tip_X": y_train[:, 20],
-        "Nose_Tip_Y": y_train[:, 21],
+        "Right_Eyebrow_Inner_End_x": y_train[:, 16],
+        "Right_Eyebrow_Inner_End_y": y_train[:, 17],
     },
     epochs=200,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
         {
-            "Nose_Tip_X": y_val[:, 20],
-            "Nose_Tip_Y": y_val[:, 21],
+            "Right_Eyebrow_Inner_End_x": y_val[:, 16],
+            "Right_Eyebrow_Inner_End_y": y_val[:, 17],
         },
     ),
     verbose=2,

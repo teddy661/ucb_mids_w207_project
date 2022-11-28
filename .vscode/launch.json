@@ -5,50 +5,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "data_loader",
+      "name": "Current",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/model/data_loader.py",
+      "program": "${file}",
       "console": "integratedTerminal",
       "justMyCode": true,
       // we just need to make sure os.getcwd() is the root of the project
-      "env": { "PYTHONPATH": "${workspaceRoot}" } // this is a bug in VSCode, shouldn't need to do this
-    },
-    {
-      "name": "image_factory",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/image_factory.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "env": { "PYTHONPATH": "${workspaceRoot}" }
-    },
-    {
-      "name": "model-runner",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/model_joint.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "env": { "PYTHONPATH": "${workspaceRoot}" }
-    },
-    {
-      "name": "model-tuner",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/model_tuner.py",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "env": { "PYTHONPATH": "${workspaceRoot}" }
-    },
-    {
-      "name": "create db",
-      "type": "python",
-      "request": "launch",
-      "program": "${workspaceFolder}/db/create_db.py",
-      "console": "integratedTerminal",
-      "args": ["-f"],
-      "justMyCode": true,
       "env": { "PYTHONPATH": "${workspaceRoot}" }
     }
   ]

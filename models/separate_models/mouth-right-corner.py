@@ -14,7 +14,7 @@ ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "facial-keypoints-right-eyebrow-outer-end"
+FINAL_MODEL_NAME = "facial-keypoints-mouth-right-corner"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
@@ -66,7 +66,7 @@ train = pd.read_csv(TRAIN_CSV, encoding="utf8")
 classes = train.select_dtypes(include=[np.number]).columns
 num_classes = len(classes)
 
-train_only_all_points = train[train["right_eyebrow_outer_end_x"].notna()]
+train_only_all_points = train[train["mouth_right_corner_x"].notna()]
 y_all = np.array(train_only_all_points[classes])
 
 imgs_all = []
@@ -279,19 +279,19 @@ norm_fc2 = keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 ## Begin Output Layers
 ##
 
-right_eyebrow_outer_end_x = keras.layers.Dense(
-    units=1, activation=None, name="Right_Eyebrow_Outer_End_X"
+mouth_right_corner_x = keras.layers.Dense(
+    units=1, activation=None, name="Mouth_Right_Corner_x"
 )(norm_fc2)
-right_eyebrow_outer_end_y = keras.layers.Dense(
-    units=1, activation=None, name="Right_Eyebrow_Outer_End_Y"
+mouth_right_corner_y = keras.layers.Dense(
+    units=1, activation=None, name="Mouth_Right_Corner_y"
 )(norm_fc2)
 
 
 model = tf.keras.Model(
     inputs=[input_layer],
     outputs=[
-        right_eyebrow_outer_end_x,
-        right_eyebrow_outer_end_y,
+        mouth_right_corner_x,
+        mouth_right_corner_y,
     ],
     name=FINAL_MODEL_NAME,
 )
@@ -299,12 +299,12 @@ model = tf.keras.Model(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss={
-        "Right_Eyebrow_Outer_End_X": "mse",
-        "Right_Eyebrow_Outer_End_Y": "mse",
+        "Mouth_Right_Corner_x": "mse",
+        "Mouth_Right_Corner_y": "mse",
     },
     metrics={
-        "Right_Eyebrow_Outer_End_X": "mse",
-        "Right_Eyebrow_Outer_End_Y": "mse",
+        "Mouth_Right_Corner_x": "mse",
+        "Mouth_Right_Corner_y": "mse",
     },
 )
 model.summary()
@@ -336,16 +336,16 @@ reduce_lr_on_plateau = ReduceLROnPlateau(
 history = model.fit(
     x=X_train,
     y={
-        "Right_Eyebrow_Outer_End_X": y_train[:, 18],
-        "Right_Eyebrow_Outer_End_Y": y_train[:, 19],
+        "Mouth_Right_Corner_x": y_train[:, 24],
+        "Mouth_Right_Corner_y": y_train[:, 25],
     },
     epochs=200,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
         {
-            "Right_Eyebrow_Outer_End_X": y_val[:, 18],
-            "Right_Eyebrow_Outer_End_Y": y_val[:, 19],
+            "Mouth_Right_Corner_x": y_val[:, 24],
+            "Mouth_Right_Corner_y": y_val[:, 25],
         },
     ),
     verbose=2,

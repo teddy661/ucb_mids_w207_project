@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 *.db
+model_saves/
 .DS_Store
 
 # C extensions

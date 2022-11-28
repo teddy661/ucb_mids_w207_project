@@ -7,7 +7,7 @@ def get_data_paths() -> tuple[Path, Path, Path]:
     ROOT_DIR = (Path(__file__).parent.parent).resolve()
     DATA_DIR = ROOT_DIR.joinpath("data")
 
-    TRAIN_DATA_PATH = DATA_DIR.joinpath("training.csv")
+    TRAIN_DATA_PATH = DATA_DIR.joinpath("processed_training.csv")
     TEST_DATA_PATH = DATA_DIR.joinpath("test.csv")
     verify_paths(ROOT_DIR, TRAIN_DATA_PATH, TEST_DATA_PATH)
 
