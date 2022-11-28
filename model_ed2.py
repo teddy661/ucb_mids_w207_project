@@ -80,7 +80,7 @@ imgs_all = []
 for idx, r in train_only_all_points.iterrows():
     imgs_all.append(
         np.array(r["Image"].split())
-        .astype(np.int64)
+        .astype(np.uint8)
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
 imgs_all = np.array(imgs_all)
