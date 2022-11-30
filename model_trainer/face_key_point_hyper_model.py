@@ -90,13 +90,15 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
         ## Begin Convolutional Layers
         prev_layer = rescale
-        for cur_con_layer in range(hp.Int("num_conv_layers", 3, 5)):
+        num_conv_layers = 5  # hp.Int("num_conv_layers", 3, 5)
+        for cur_con_layer in range(num_conv_layers):
 
             # some defaults after tuning
-            filter_size = 64  # hp.Int("filter_size", 32, 64, 32)
-            kernel_size = 3  # hp.Int("kernel_size", 3, 5, 2)
+            filter_size = 32  # hp.Int("filter_size", 32, 64, 32)
+            kernel_size = (3, 3)
             # if hp.Boolean("increasing_filter_size"):
-            filter_size = filter_size * (cur_con_layer + 1)
+            if filter_size < 256:
+                filter_size *= 2
 
             conv_1 = tf.keras.layers.Conv2D(
                 filters=filter_size,
@@ -145,7 +147,7 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
         flat_1 = tf.keras.layers.Flatten()(prev_layer)
 
-        fc_units = hp.Choice("fc_units", [1024, 2048, 4096])
+        fc_units = 2048  # hp.Choice("fc_units", [1024, 2048, 4096])
         dense_1 = tf.keras.layers.Dense(
             fc_units,
             name="fc_1",
@@ -154,8 +156,8 @@ class FaceKeyPointHyperModel(kt.HyperModel):
         )(flat_1)
         norm_fc1 = tf.keras.layers.BatchNormalization(name="norm_fc1")(dense_1)
 
-        if hp.Boolean("decreasing_fc_units"):
-            fc_units = fc_units // 2
+        # if hp.Boolean("decreasing_fc_units"):
+        #     fc_units = fc_units // 2
 
         dense_2 = tf.keras.layers.Dense(
             fc_units,
@@ -181,7 +183,7 @@ class FaceKeyPointHyperModel(kt.HyperModel):
                     )(norm_fc2)
                 )
                 loss_dict[label + coord] = "mse"
-                metrics_dict[label + coord] = "mae"
+                metrics_dict[label + coord] = "mse"
 
         model = tf.keras.Model(
             inputs=[input_layer],
@@ -209,15 +211,15 @@ class FaceKeyPointHyperModel(kt.HyperModel):
     ):
 
         x_val, y_val = validation_data
-        y = self.convert_y_to_dictonary(y)
-        y_val = self.convert_y_to_dictonary(y_val)
-        validation_data = (x_val, y_val)
+        y_to_use = self.convert_y_to_dictonary(y)
+        y_val_to_use = self.convert_y_to_dictonary(y_val)
+        validation_data_to_use = (x_val, y_val_to_use)
 
         return model.fit(
             *args,
             x=x,
-            y=y,
-            validation_data=validation_data,
+            y=y_to_use,
+            validation_data=validation_data_to_use,
             batch_size=32,  # hp.Choice("batch_size", [32, 64]),
             **kwargs,
         )
@@ -229,11 +231,11 @@ class FaceKeyPointHyperModel(kt.HyperModel):
         """
 
         y_dict = {}
-        y_ind = 0
-
+        col_idx = 0
         # have to loop through ALL_Y_COLUMNS, as the order might be wrong in self.labels
         for i, col in enumerate(ALL_Y_COLUMNS):
             if col[:-2] in self.labels:
-                y_dict[col] = y_array[:, y_ind]
-                y_ind += 1
+                y_dict[col] = y_array[:, col_idx]
+                col_idx += 1
+
         return y_dict

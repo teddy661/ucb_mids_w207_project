@@ -5,12 +5,13 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
+                                        ReduceLROnPlateau)
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 BATCH_SIZE = 32
-ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
+ROOT_DIR = (Path(__file__).parent.parent.parent).resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()

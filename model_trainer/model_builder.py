@@ -2,6 +2,8 @@ import os
 import pickle
 
 import keras_tuner as kt
+import numpy as np
+import pandas as pd
 import tensorflow as tf
 
 import data.path_utils as path_utils
@@ -35,8 +37,8 @@ def tune_model(labels_to_include, model_name) -> tf.keras.Model:
         FaceKeyPointHyperModel(labels=labels_to_include, name=model_name),
         objective="val_loss",
         seed=1234,
-        max_epochs=100,  # Hyperband automatically picks the best num of epochs
-        executions_per_trial=1,  # avergae out the results of 2 trials
+        max_epochs=100,  # Hyperband automatically picks the best num of epochs, but this is the max you allow
+        executions_per_trial=2,  # avergae out the results of 2 trials
         overwrite=True,
         directory=MODEL_PATH.joinpath("tuning"),
         project_name=model_name + "_tuning",
@@ -66,7 +68,7 @@ def tune_model(labels_to_include, model_name) -> tf.keras.Model:
     # callbacks.append(model_checkpoint)
 
     reduce_lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", patience=5, verbose=1, factor=0.3, min_lr=0.0000001
+        monitor="val_loss", patience=5, verbose=1, factor=0.3, min_lr=10e-7
     )
     callbacks.append(reduce_lr_on_plateau)
 
@@ -82,10 +84,11 @@ def tune_model(labels_to_include, model_name) -> tf.keras.Model:
     best_hp = tuner.get_best_hyperparameters()[0]
     print(best_hp.values)
 
-    model = tuner.hypermodel.build(best_hp)
+    model: tf.keras.Model = tuner.hypermodel.build(best_hp)
     history: tf.keras.callbacks.History = model.fit(
         x=X_train,
         y=y_train,
+        batch_size=32,
         epochs=100,
         validation_data=(X_val, y_val),
         callbacks=callbacks,
@@ -109,5 +112,30 @@ def test_and_submit(model: tf.keras.Model, model_name: str):
 
     _, TEST_DATA_PATH, MODEL_PATH = path_utils.get_data_paths()
     X_test = data_loader.load_test_data_from_file(TEST_DATA_PATH)
+    results = model.predict(X_test, batch_size=32, verbose=2)
 
-    raise NotImplementedError("TODO: implement this")
+    # save the results to a csv file for submission
+    np_results = np.transpose(np.array(results))
+    np_results = np.squeeze(np_results)
+    results_df = pd.DataFrame(np_results, columns=y_columns_to_include)
+    results_df.index += 1
+    results_df.to_csv(f"{model_name}_test_results.csv", index=False, encoding="utf-8")
+
+    reformatted_results = []
+    for index, row in results_df.iterrows():
+        row_df = row.to_frame()
+        row_df.rename(columns={index: "Location"}, inplace=True)
+        row_df.reset_index(inplace=True)
+        row_df.rename(columns={"index": "FeatureName"}, inplace=True)
+        row_df.insert(0, "ImageId", index)
+        reformatted_results.append(row_df)
+    reformatted_results_df = pd.concat(reformatted_results, ignore_index=True)
+
+    id_lookup_df = pd.read_csv(ID_LOOKUP_TABLE, encoding="utf8")
+
+    submission_df = pd.merge(
+        id_lookup_df, reformatted_results_df, how="left", on=["ImageId", "FeatureName"]
+    )
+    submission_df.drop(columns=["ImageId", "FeatureName", "Location_x"], inplace=True)
+    submission_df.rename(columns={"Location_y": "Location"}, inplace=True)
+    submission_df.to_csv("submission.csv", index=False, encoding="utf-8")
