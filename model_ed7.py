@@ -14,7 +14,7 @@ ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "final-model"
+FINAL_MODEL_NAME = "model_ed7"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",

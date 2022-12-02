@@ -15,7 +15,7 @@ DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
 TEST_CSV = DATA_DIR.joinpath("test.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "final-model"
+FINAL_MODEL_NAME = "model4"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
