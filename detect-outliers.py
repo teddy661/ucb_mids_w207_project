@@ -473,7 +473,8 @@ for x in range(IMAGE_PER_ROW):
 
 print("No faces Save composite image...")
 dst.save("nofaces.png", format="png", optimize=True)
-processed_train_df = train_df.drop(train_df.index[MTNN_NOFACES])
+#processed_train_df = train_df.drop(train_df.index[MTNN_NOFACES])
+processed_train_df = train_df
 
 print(train_df["max_gray_count"].describe())
 lots_of_nothing_images = train_df.loc[train_df["max_gray_count"] >= 1550]
