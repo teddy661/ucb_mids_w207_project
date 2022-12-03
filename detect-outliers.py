@@ -14,7 +14,7 @@ IMAGE_PER_ROW = 10
 ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("training.csv")
-PROCESSED_TRAIN_CSV = DATA_DIR.joinpath("processed_training_mtcnn.csv")
+PROCESSED_TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MTNN_NOFACES = [
     6,
     63,
