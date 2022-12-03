@@ -476,18 +476,20 @@ dst.save("nofaces.png", format="png", optimize=True)
 processed_train_df = train_df.drop(train_df.index[MTNN_NOFACES])
 
 print(train_df["max_gray_count"].describe())
-lots_of_nothing_images = train_df.loc[train_df["max_gray_count"] >= 1600]
+lots_of_nothing_images = train_df.loc[train_df["max_gray_count"] >= 1550]
 print(lots_of_nothing_images.shape[0])
 rows = math.floor(lots_of_nothing_images.shape[0] / (cols - 1))
 fig = plt.figure(figsize=(8, 8))
+fig.suptitle("Number of Pixels with Same Gray Level Greater Than 1550")
+
 i = 1
 for index, row in lots_of_nothing_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-# plt.show()
+plt.show()
 processed_train_df.drop(
-    processed_train_df[processed_train_df["max_gray_count"] >= 1600].index, inplace=True
+    processed_train_df[processed_train_df["max_gray_count"] >= 1550].index, inplace=True
 )
 
 print(train_df["delta_eye_centers_x"].describe())
@@ -496,12 +498,14 @@ print(low_eye_x_distance_images.shape[0])
 
 rows = math.floor(low_eye_x_distance_images.shape[0] / (cols - 1))
 fig = plt.figure(figsize=(8, 8))
+fig.suptitle("Eye Center X Distance Less than Twenty")
+
 i = 1
 for index, row in low_eye_x_distance_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-# plt.show()
+plt.show()
 processed_train_df.drop(
     processed_train_df[processed_train_df["delta_eye_centers_x"] <= 20].index,
     inplace=True,
@@ -519,7 +523,7 @@ for index, row in big_eye_y_distance_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-# plt.show()
+#plt.show()
 
 
 print(train_df["gray_levels"].describe())
@@ -529,12 +533,14 @@ print(low_gray_count_images.shape[0])
 
 rows = math.floor(low_gray_count_images.shape[0] / (cols - 1))
 fig = plt.figure(figsize=(8, 8))
+fig.suptitle("Number of Gray Levels Less Than 110")
 i = 1
 for index, row in low_gray_count_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-# plt.show()
+plt.show()
+
 processed_train_df.drop(
     processed_train_df[processed_train_df["gray_levels"] <= 110].index, inplace=True
 )

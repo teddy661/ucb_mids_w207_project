@@ -14,7 +14,7 @@ ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "final-model"
+FINAL_MODEL_NAME = "vgg19-reduced"
 
 Y_COLUMN_NAMES = [
     "left_eye_center_x",
@@ -519,7 +519,7 @@ early_stopping = EarlyStopping(
     monitor="val_loss",
     mode="min",
     verbose=1,
-    patience=200,
+    patience=40,
     min_delta=0.0001,
     restore_best_weights=True,
 )
@@ -574,7 +574,7 @@ history = model.fit(
         "Mouth_Center_Bottom_Lip_X": y_train[:, 28],
         "Mouth_Center_Bottom_Lip_Y": y_train[:, 29],
     },
-    epochs=2000,
+    epochs=400,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
