@@ -1,0 +1,31 @@
+#!/bin/bash
+/usr/local/bin/python left-eye-center-model.py
+echo "=========================== END left-eye-center-model ============================================="
+/usr/local/bin/python left-eye-inner-corner.py
+echo "=========================== END left-eye-inner-corner ============================================="
+/usr/local/bin/python left-eye-outer-corner.py
+echo "=========================== END left-eye-outer-corner ============================================="
+/usr/local/bin/python left-eyebrow-inner-end.py
+echo "=========================== END left-eyebrow-inner-end ============================================"
+/usr/local/bin/python left-eyebrow-outer-end.py
+echo "=========================== END left-eyebrow-outer-end ============================================"
+/usr/local/bin/python mouth-center-bottom-lip.py
+echo "=========================== END mouth-center-bottom-lip ==========================================="
+/usr/local/bin/python mouth-center-top-lip.py
+echo "=========================== END mouth-center-top-lip =============================================="
+/usr/local/bin/python mouth-left-corner.py
+echo "=========================== END mouth-left-corner ================================================="
+/usr/local/bin/python mouth-right-corner.py
+echo "=========================== END mouth-right-corner ================================================"
+/usr/local/bin/python nose-tip.py
+echo "=========================== END nose-tip =========================================================="
+/usr/local/bin/python right-eye-center-model.py
+echo "=========================== END right-eye-center-model ============================================"
+/usr/local/bin/python right-eye-inner-corner.py
+echo "=========================== END right-eye-inner-corner ============================================"
+/usr/local/bin/python right-eye-outer-corner.py
+echo "=========================== END right-eye-outer-corner ============================================"
+/usr/local/bin/python right-eyebrow-inner-end.py
+echo "=========================== END right-eyebrow-inner-end ==========================================="
+/usr/local/bin/python right-eyebrow-outer-end.py
+echo "=========================== END right-eyebrow-outer-end ==========================================="
