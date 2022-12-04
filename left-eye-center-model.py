@@ -6,6 +6,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+import cv2
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -76,8 +77,17 @@ for idx, r in train_only_all_points.iterrows():
             IMAGE_WIDTH, IMAGE_HEIGHT, 1
         )
     )
-imgs_all = np.array(imgs_all)
+## Let's do fun stuff
+processed_images = []
+clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+for cimage in imgs_all:
+    step_1 = cv2.fastNlMeansDenoising(cimage)
+    step_2 = clahe.apply(step_1)
+    step_3 = step_2.reshape(96,96,1)
+    processed_images.append(step_3)
 
+# This is used below choose either processed_images or imgs_all for original
+imgs_all = np.array(processed_images)
 
 ###
 tf.random.set_seed(1234)

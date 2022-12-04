@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import cv2
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -216,6 +217,17 @@ for idx, r in test_df.iterrows():
         .astype(np.uint8)
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
+
+processed_images = []
+clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+for cimage in imgs_all:
+    step_1 = cv2.fastNlMeansDenoising(cimage)
+    step_2 = clahe.apply(step_1)
+    step_3 = step_2.reshape(96,96,1)
+    processed_images.append(step_3)
+
+# This is used below choose either processed_images or imgs_all for original
+imgs_all = np.array(processed_images)
 
 test_np_data = np.array(imgs_all)
 
