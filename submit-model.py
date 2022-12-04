@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import cv2
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -14,7 +15,7 @@ ID_LOOKUP_TABLE = DATA_DIR.joinpath("IdLookupTable.csv")
 MODEL_DIR = Path("model_saves").resolve()
 FINAL_MODEL_NAME = "0161-54.37"
 FINAL_MODEL_NAME = "0087-56.96"
-FINAL_MODEL_NAME = "final-model"
+FINAL_MODEL_NAME = "model_ed7"
 TF_MODEL = MODEL_DIR.joinpath(FINAL_MODEL_NAME)
 
 OUTPUTS = [
@@ -78,6 +79,17 @@ for idx, r in test_df.iterrows():
         np.fromstring(r['Image'], dtype=np.uint8, sep=' ')
         .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
     )
+## Let's do fun stuff
+processed_images = []
+clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+for cimage in imgs_all:
+    step_1 = cv2.fastNlMeansDenoising(cimage)
+    step_2 = clahe.apply(step_1)
+    step_3 = step_2.reshape(96,96,1)
+    processed_images.append(step_3)
+
+# This is used below choose either processed_images or imgs_all for original
+imgs_all = np.array(processed_images)
 
 test_np_data = np.array(imgs_all)
 
