@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+import data.data_augment as data_augment
 import data.path_utils as path_utils
 import db.db_access as dba
 
@@ -21,8 +22,8 @@ def load_train_data_from_file(
     X_train, X_val, y_train, y_val, X_test
     """
 
-    TRAIN_DB_PATH, _, _ = path_utils.get_data_paths()
-    train_raw = pd.read_csv(TRAIN_DB_PATH, encoding="utf8")
+    TRAIN_DATA_PATH, _, _ = path_utils.get_data_paths()
+    train_raw = pd.read_csv(TRAIN_DATA_PATH, encoding="utf8")
     train_clean = clean_up_data(train_raw, y_columns)
 
     train_x_array = np.stack(
@@ -32,6 +33,11 @@ def load_train_data_from_file(
         ]
     )
     train_y_array = np.asarray(train_clean[y_columns].values)
+
+    # augment data
+    train_x_array, train_y_array = data_augment.augment_data(
+        train_x_array, train_y_array
+    )
 
     # shuffle and split
     shuffled_indices = np.random.permutation(range(len(train_y_array)))
@@ -107,5 +113,5 @@ def load_data_from_db(
     X_test = dba.get_test_data_as_numpy(sqcur)
 
     dba.dispose(sqcon, sqcur)
-    
+
     return X_train, X_val, y_train, y_val, X_test

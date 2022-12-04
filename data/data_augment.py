@@ -1,112 +1,87 @@
-# OpenCV for s a library containing programming functions
-# mainly aimed at real-time computer vision problem solving
-import cv2
+import numpy as np
+from scipy import ndimage
 
 
-def aug_shift(X, y, pixel_shifts=[15]):
+def flipping_augmentation(images, features):
+    flipped_images = np.flip(images, axis=2)
+
+    flipped_features = features.copy()
+    for i, feat in enumerate(flipped_features):
+        for j, val in enumerate(feat):
+            if j % 2 == 0:
+                flipped_features[i][j] = 96 - val
+
+    return flipped_images, flipped_features
+
+
+def rotate_points(points, angle):
     """
-    Function to shift images (X) and points (y) in the same time.
-    INPUT:
-        X: numpy array with shape (n, d, d, c)
-        y: points to plot with shape (n, m)
-        pixel_shifts: a list of values indicating horizontal & vertical shift amount in pixels
-    OUTPUT:
-        augmented images with shape (n, d, d, c)
-        augmented points with shape (n, m)
+    shift points in the plane so that the center of rotation is at the origin
+    Our image is 96*96 ,so substract 48
     """
-    size = X.shape[1]
-    shifted_images = []
-    shifted_keypoints = []
-    for shift in pixel_shifts:
-        for (shift_x, shift_y) in [
-            (-shift, -shift),
-            (-shift, shift),
-            (shift, -shift),
-            (shift, shift),
-        ]:
-            sh = np.float32([[1, 0, shift_x], [0, 1, shift_y]])
+    points = points - 48
 
-            for image, keypoint in zip(X, y):
-                shifted_image = cv2.warpAffine(
-                    image, sh, (size, size), flags=cv2.INTER_CUBIC
-                )
-                shifted_keypoint = np.array(
-                    [
-                        (point + shift_x) if idx % 2 == 0 else (point + shift_y)
-                        for idx, point in enumerate(keypoint)
-                    ]
-                )
+    # rotation matrix
+    theta = np.radians(angle)
+    c, s = np.cos(theta), np.sin(theta)
+    R = np.array(((c, -s), (s, c)))
 
-                if np.all(0.0 < shifted_keypoint) and np.all(shifted_keypoint < size):
-                    shifted_images.append(shifted_image.reshape(size, size, 1))
-                    shifted_keypoints.append(shifted_keypoint)
-    shifted_keypoints = np.clip(shifted_keypoints, 0.0, size)
-    return np.array(shifted_images), np.array(shifted_keypoints)
+    # rotate the points
+    for i in range(0, len(points), 2):
+        xy = np.array([points[i], points[i + 1]])
+        xy_rot = R @ xy
+        points[i], points[i + 1] = xy_rot
+
+    #  shift again so the origin goes back to the desired center of rotation
+    points = points + 48
+    return points
 
 
-def aug_brightness(X, y, brightness_range=[0.6, 1.2]):
-    """
-    Function to adjust the brightness of images (X)
-    INPUT:
-        X: numpy array with shape (n, d, d, c)
-        y: points to plot with shape (n, m)
-        brightness_range: a list of two values to decrease/increase brightness
-    OUTPUT:
-        augmented images with shape (n, d, d, c)
-        augmented points with shape (n, m)
-    Note:
-        Brightness is pre-defined as either 1.2 times or 0.6 times
-    """
-    altered_brightness_images = []
-    inc_brightness_images = np.clip(X * brightness_range[1], 0, 255)
-    dec_brightness_images = np.clip(X * brightness_range[0], 0, 255)
-    altered_brightness_images.extend(inc_brightness_images)
-    altered_brightness_images.extend(dec_brightness_images)
-    return np.array(altered_brightness_images), np.concatenate((y, y))
-
-
-def aug_rotation(X, y, rotation_angles=[15]):
-    """
-    Function to rotate images (X) and points (y) in the same time.
-    INPUT:
-        X: numpy array with shape (n, d, d, c)
-        y: points to plot with shape (n, m)
-        rotation_angles: a list of angles to rotate
-    OUTPUT:
-        augmented images with shape (n, d, d, c)
-        augmented points with shape (n, m)
-
-    """
-
+def rotate_augmentation(images, features, angle=15):
     rotated_images = []
-    rotated_keypoints = []
+    for img in images:
+        img_rot = ndimage.rotate(img, -angle, reshape=False)
+        rotated_images.append(img_rot)
 
-    size = X.shape[1]  # suppose h == w
+    rotated_features = []
+    for feat in features:
+        feat_rot = rotate_points(feat, angle)
+        rotated_features.append(feat_rot)
 
-    center = (int(size / 2), int(size / 2))
+    return np.array(rotated_images), np.array(rotated_features)
 
-    for angle in rotation_angles:
-        for angle in [angle, -angle]:
-            rot = cv2.getRotationMatrix2D(center, angle, 1.0)
-            angle_rad = -angle * pi / 180.0
 
-            for image in X:
-                rotated_image = cv2.warpAffine(
-                    image.reshape(size, size), rot, (size, size), flags=cv2.INTER_CUBIC
-                )
-                rotated_images.append(rotated_image)
+def brightness_augmentation(images, features, factor=1.5):
+    bright = []
+    for img in images:
+        bright.append(np.clip(img * factor, 0, 255))
+    return np.array(bright), features
 
-            for keypoint in y:
-                rotated_keypoint = keypoint - int(size / 2)
 
-                for idx in range(0, len(rotated_keypoint), 2):
-                    rotated_keypoint[idx] = rotated_keypoint[idx] * cos(
-                        angle_rad
-                    ) - rotated_keypoint[idx + 1] * sin(angle_rad)
-                    rotated_keypoint[idx + 1] = rotated_keypoint[idx] * sin(
-                        angle_rad
-                    ) + rotated_keypoint[idx + 1] * cos(angle_rad)
-                rotated_keypoint += size / 2
-                rotated_keypoints.append(rotated_keypoint)
+def noise_augmentation(images, features, factor=0.1):
+    augmented = []
+    noise = np.random.randint(low=0, high=255, size=images.shape[1:])
+    for img in images:
+        img = img + (noise * factor)
+        augmented.append(img)
 
-    return np.reshape(rotated_images, (-1, size, size, 1)), np.array(rotated_keypoints)
+    return np.array(augmented), features
+
+
+def augment_data(X, y):
+    """
+    Augment data by flipping, rotating, adding noise and changing brightness
+    """
+    augmented_X = [X]
+    augmented_y = [y]
+    for aug in [
+        flipping_augmentation,
+        # rotate_augmentation,
+        # noise_augmentation,
+        # brightness_augmentation,
+    ]:
+        aug_images, aug_features = aug(X, y)
+        augmented_X.append(aug_images)
+        augmented_y.append(aug_features)
+
+    return np.concatenate(augmented_X), np.concatenate(augmented_y)

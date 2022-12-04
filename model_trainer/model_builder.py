@@ -8,8 +8,8 @@ import pandas as pd
 import tensorflow as tf
 from matplotlib import pyplot as plt
 
+import data.data_loader as data_loader
 import data.path_utils as path_utils
-import model_trainer.data_loader as data_loader
 from model_trainer.face_key_point_hyper_model import FaceKeyPointHyperModel
 
 ALL_Y_COLUMNS = [
@@ -46,7 +46,7 @@ ALL_Y_COLUMNS = [
 ]
 
 
-def tune_model(labels_to_include, model_name) -> tf.keras.Model:
+def tune_model(labels_to_include, model_name, additional_inputs:np.ndarray = None) -> tf.keras.Model:
     """
     Tune a modle using the given labels
     """
@@ -101,7 +101,7 @@ def tune_model(labels_to_include, model_name) -> tf.keras.Model:
     history: tf.keras.callbacks.History = model.fit(
         x=X_train,
         y=y_train,
-        batch_size=32,  # best_hp.values["batch_size"],
+        batch_size=128,  # best_hp.values["batch_size"],
         epochs=200,
         validation_data=(X_val, y_val),
         callbacks=hm.get_callbacks(hp=best_hp),
@@ -176,7 +176,7 @@ def plot_model_history(model_name: str, history: dict = None):
         ) as history_file:
             history = pickle.load(history_file)
 
-    x_arr = np.arange(len(history["loss"])) + 1
+    x_arr = np.arange(len(history["loss"][:-30])) + 1
 
     fig = plt.figure(figsize=(12, 4))
     fig.suptitle(model_name)

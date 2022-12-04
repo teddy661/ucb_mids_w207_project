@@ -1,4 +1,4 @@
-import model_trainer.data_loader as data_loader
+import data.data_loader as data_loader
 import model_trainer.model_builder as model_builder
 
 MODEL_NAME = "model_joint"
