@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 
@@ -11,7 +9,6 @@ IMAGE_WIDTH = 96
 
 
 def load_train_data_from_file(
-    train_data_path: Path,
     y_columns: list,
     train_val_split=0.8,
 ) -> tuple:
@@ -24,7 +21,8 @@ def load_train_data_from_file(
     X_train, X_val, y_train, y_val, X_test
     """
 
-    train_raw = pd.read_csv(train_data_path, encoding="utf8")
+    TRAIN_DB_PATH, _, _ = path_utils.get_data_paths()
+    train_raw = pd.read_csv(TRAIN_DB_PATH, encoding="utf8")
     train_clean = clean_up_data(train_raw, y_columns)
 
     train_x_array = np.stack(
@@ -48,12 +46,13 @@ def load_train_data_from_file(
     return X_train, X_val, y_train, y_val
 
 
-def load_test_data_from_file(test_data_path: Path) -> tuple:
+def load_test_data_from_file() -> tuple:
     """
     Load test image from the given csv and transforms into standard numpy arrays.
     """
 
-    test_raw = pd.read_csv(test_data_path, encoding="utf8")
+    _, TEST_DB_PATH, _ = path_utils.get_data_paths()
+    test_raw = pd.read_csv(TEST_DB_PATH, encoding="utf8")
     X_test = np.stack(
         [
             np.asarray(p.split(), dtype="float32").reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
@@ -108,5 +107,5 @@ def load_data_from_db(
     X_test = dba.get_test_data_as_numpy(sqcur)
 
     dba.dispose(sqcon, sqcur)
-
+    
     return X_train, X_val, y_train, y_val, X_test

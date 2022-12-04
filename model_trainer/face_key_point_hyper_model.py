@@ -63,6 +63,18 @@ ALL_LABELS = [
     "mouth_center_bottom_lip",
 ]
 
+BEST_JOINT_HP = {
+    "num_conv_layers": 5,
+    "filter_size": 64,
+    "fc_units": 4096,
+}
+
+BEST_INDIVIDUAL_HP = {
+    "num_conv_layers": 4,
+    "filter_size": 32,
+    "fc_units": 2048,
+}
+
 
 class FaceKeyPointHyperModel(kt.HyperModel):
     """
@@ -73,7 +85,17 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
     def __init__(self, labels, name=None, tunable=True):
         super().__init__(name, tunable)
-        self.labels: list[str] = labels
+
+        self.labels = sorted(
+            labels, key=lambda x: ALL_LABELS.index(x)
+        )  # sort the labels based on required index
+
+        # get the predefined hyperparameters, since Ray already tuned it before
+        self.predected_hp = {}
+        if self.name == "model_joint":
+            self.predected_hp = BEST_JOINT_HP
+        elif len(self.labels) == 1:
+            self.predected_hp = BEST_INDIVIDUAL_HP
 
     def build(self, hp: kt.HyperParameters) -> tf.keras.Model:
         """
@@ -82,108 +104,124 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
         tf.keras.backend.clear_session()
         input_layer = tf.keras.layers.Input(
-            shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name="InputLayer"
+            shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name=self.name + "InputLayer"
         )
         rescale = tf.keras.layers.Rescaling(
-            1.0 / 255, name="rescaling", input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1)
+            1.0 / 255,
+            name=self.name + "rescaling",
+            input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1),
         )(input_layer)
 
         ## Begin Convolutional Layers
         prev_layer = rescale
-        num_conv_layers = 5  # hp.Int("num_conv_layers", 3, 5)
+        num_conv_layers = (
+            self.predected_hp["num_conv_layers"]
+            if "num_conv_layers" in self.predected_hp
+            else hp.Int("num_conv_layers", 4, 6)
+        )
         for cur_con_layer in range(num_conv_layers):
 
             # some defaults after tuning
-            filter_size = 32  # hp.Int("filter_size", 32, 64, 32)
+            filter_size = (
+                self.predected_hp["filter_size"]
+                if "filter_size" in self.predected_hp
+                else hp.Int("filter_size", 32, 64, 32)
+            )
             kernel_size = (3, 3)
-            # if hp.Boolean("increasing_filter_size"):
-            if filter_size < 256:
-                filter_size *= 2
+            # after tuning, we found that the filter size should always increase
+            filter_size *= 2
 
             conv_1 = tf.keras.layers.Conv2D(
                 filters=filter_size,
                 kernel_size=kernel_size,
                 strides=(1, 1),
-                name=f"conv_1st_{str(cur_con_layer)}",
+                name=self.name + f"conv_1st_{str(cur_con_layer)}",
                 padding="same",
                 kernel_initializer="he_uniform",
                 activation="relu",
             )(prev_layer)
 
             norm_1 = tf.keras.layers.BatchNormalization(
-                name=f"norm_1st_{str(cur_con_layer)}",
+                name=self.name + f"norm_1st_{str(cur_con_layer)}",
             )(conv_1)
 
             conv_2 = tf.keras.layers.Conv2D(
                 filters=filter_size,
                 kernel_size=kernel_size,
                 strides=(1, 1),
-                name=f"conv_2nd_{str(cur_con_layer)}",
+                name=self.name + f"conv_2nd_{str(cur_con_layer)}",
                 padding="same",
                 kernel_initializer="he_uniform",
                 activation="relu",
             )(norm_1)
 
             norm_2 = tf.keras.layers.BatchNormalization(
-                name=f"norm_2nd_{str(cur_con_layer)}",
+                name=self.name + f"norm_2nd_{str(cur_con_layer)}",
             )(conv_2)
 
             maxp = tf.keras.layers.MaxPooling2D(
                 pool_size=(2, 2),
                 padding="same",
-                name=f"mpool_{str(cur_con_layer)}",
+                name=self.name + f"mpool_{str(cur_con_layer)}",
             )(norm_2)
 
-            if hp.Boolean("dropout"):
-                dropout = tf.keras.layers.Dropout(
-                    rate=0.25,
-                    name=f"dropout_{str(cur_con_layer)}",
-                )(maxp)
-                prev_layer = dropout
-            else:
-                prev_layer = maxp
+            # after tuning, we found that the dropout is not needed
+            # if hp.Boolean("dropout"):
+            #     dropout = tf.keras.layers.Dropout(
+            #         rate=0.25,
+            #         name=self.name + f"dropout_{str(cur_con_layer)}",
+            #     )(maxp)
+            #     prev_layer = dropout
+            # else:
+            prev_layer = maxp
 
         ## Fully Connected layers
 
         flat_1 = tf.keras.layers.Flatten()(prev_layer)
 
-        fc_units = 2048  # hp.Choice("fc_units", [1024, 2048, 4096])
+        fc_units = (
+            self.predected_hp["fc_units"]
+            if "fc_units" in self.predected_hp
+            else hp.Choice("fc_units", [2048, 4096, 8192])
+        )
+
         dense_1 = tf.keras.layers.Dense(
             fc_units,
-            name="fc_1",
+            name=self.name + "fc_1",
             kernel_initializer="he_uniform",
             activation="relu",
         )(flat_1)
-        norm_fc1 = tf.keras.layers.BatchNormalization(name="norm_fc1")(dense_1)
+        norm_fc1 = tf.keras.layers.BatchNormalization(name=self.name + "norm_fc1")(
+            dense_1
+        )
 
-        # if hp.Boolean("decreasing_fc_units"):
-        #     fc_units = fc_units // 2
+        # after tuning, we found that fc units should always decrease
+        fc_units = fc_units // 2
 
         dense_2 = tf.keras.layers.Dense(
             fc_units,
-            name="fc_2",
+            name=self.name + "fc_2",
             kernel_initializer="he_uniform",
             activation="relu",
         )(norm_fc1)
-        norm_fc2 = tf.keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
+        norm_fc2 = tf.keras.layers.BatchNormalization(name=self.name + "norm_fc2")(
+            dense_2
+        )
 
         ## Construct Output Layers, loss and metrics
-
         output_layers = []
         loss_dict = {}
         metrics_dict = {}
-        for i, label in enumerate(self.labels):
-            # append 2 output layers (_x and _y) for each label, given the coordinates
-            for j, coord in enumerate(["_x", "_y"]):
-                output_layers.append(
-                    tf.keras.layers.Dense(
-                        units=1,
-                        activation=None,
-                        name=label + coord,
-                    )(norm_fc2)
-                )
-                loss_dict[label + coord] = "mse"
-                metrics_dict[label + coord] = "mse"
+        for col_name in self.get_column_names():
+            output_layers.append(
+                tf.keras.layers.Dense(
+                    units=1,
+                    activation=None,
+                    name=col_name,
+                )(norm_fc2)
+            )
+            loss_dict[col_name] = "mse"
+            metrics_dict[col_name] = "mse"
 
         model = tf.keras.Model(
             inputs=[input_layer],
@@ -209,33 +247,69 @@ class FaceKeyPointHyperModel(kt.HyperModel):
         *args,
         **kwargs,
     ):
+        """
+        Fits the model with the hyperparameters, used by the tuner later.
+        """
+        # We are done tuning with parameters here, so just pass the data along
 
-        x_val, y_val = validation_data
-        y_to_use = self.convert_y_to_dictonary(y)
-        y_val_to_use = self.convert_y_to_dictonary(y_val)
-        validation_data_to_use = (x_val, y_val_to_use)
+        # add the custom callbacks on top of the tuner's callbacks
+        callbacks = kwargs["callbacks"]
+        callbacks.extend(self.get_callbacks(hp))
 
         return model.fit(
             *args,
             x=x,
-            y=y_to_use,
-            validation_data=validation_data_to_use,
+            y=y,
+            validation_data=validation_data,
             batch_size=32,  # hp.Choice("batch_size", [32, 64]),
             **kwargs,
         )
 
-    def convert_y_to_dictonary(self, y_array):
+    def get_column_names(self) -> list[str]:
+        """
+        Returns the column names of the output layers
+        """
+        return [label + coord for label in self.labels for coord in ["_x", "_y"]]
+
+    def convert_y_to_outputs(self, y_array):
         """
         Converts the y array to a dictionary, based on self.labels.
         This assumes that the y array is in the same order as self.labels.
         """
 
         y_dict = {}
-        col_idx = 0
         # have to loop through ALL_Y_COLUMNS, as the order might be wrong in self.labels
-        for i, col in enumerate(ALL_Y_COLUMNS):
-            if col[:-2] in self.labels:
-                y_dict[col] = y_array[:, col_idx]
-                col_idx += 1
+        for i, col in enumerate(self.get_column_names()):
+            y_dict[col] = y_array[:, i]
 
         return y_dict
+
+    def get_callbacks(self, hp: kt.HyperParameters):
+
+        callbacks = []
+        early_stopping = tf.keras.callbacks.EarlyStopping(
+            monitor="val_loss",
+            mode="min",
+            verbose=2,
+            patience=20,
+            min_delta=0.0001,
+            restore_best_weights=True,
+        )
+        callbacks.append(early_stopping)
+
+        model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+            "model_checkpoints/{epoch:04d}-{val_loss:.2f}",
+            monitor="val_loss",
+            mode="min",
+            verbose=2,
+            save_weights_only=False,
+            save_best_only=False,
+        )
+        # callbacks.append(model_checkpoint)
+
+        reduce_lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
+            monitor="val_loss", patience=5, verbose=2, factor=0.3, min_lr=10e-7
+        )
+        callbacks.append(reduce_lr_on_plateau)
+
+        return callbacks

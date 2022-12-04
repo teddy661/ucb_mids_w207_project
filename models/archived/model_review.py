@@ -5,14 +5,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-MODEL_DIR = Path("./model_saves").resolve()
-FINAL_MODEL_NAME = "final-model"
+MODEL_DIR = Path("./model_saves/model_saves_ed").resolve()
+FINAL_MODEL_NAME = "facial-keypoints-nose-tip"
 
-model = tf.keras.models.load_model(MODEL_DIR.joinpath(FINAL_MODEL_NAME))
-model.summary()
+# model_dir = MODEL_DIR.joinpath(FINAL_MODEL_NAME).resolve()
+# model = tf.keras.models.load_model()
+# model.summary()
 
 print(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"))
 history = pickle.load(open(MODEL_DIR.joinpath(FINAL_MODEL_NAME + "_history"), "rb"))
+
 
 hist = history
 x_arr = np.arange(len(hist["loss"])) + 1
@@ -27,3 +29,5 @@ ax.set_ylabel("Loss", size=15)
 
 print(hist["val_loss"])
 plt.show()
+
+print("done")

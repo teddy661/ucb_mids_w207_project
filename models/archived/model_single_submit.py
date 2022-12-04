@@ -84,7 +84,7 @@ test_np_data = np.array(imgs_all)
 
 
 model = tf.keras.models.load_model(TF_MODEL)
-results = model.predict(test_np_data, batch_size=100, verbose=2)
+results = model.predict(test_np_data, batch_size=100, verbose=1)
 np_results = np.transpose(np.array(results))
 np_results = np.squeeze(np_results)
 results_df = pd.DataFrame(np_results, columns=OUTPUTS)
