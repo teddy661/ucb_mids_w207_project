@@ -176,11 +176,8 @@ maxp_2 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="pool_
 ##
 
 flat_1 = keras.layers.Flatten()(maxp_2)
-dense_1 = keras.layers.Dense(
-    1024, name="fc_1", activation="relu"
-)(flat_1)
+dense_1 = keras.layers.Dense(1024, name="fc_1", activation="relu")(flat_1)
 drop_1 = keras.layers.Dropout(0.50, name="Dropout_1")(dense_1)
-
 
 
 ##

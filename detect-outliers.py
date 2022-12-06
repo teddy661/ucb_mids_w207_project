@@ -473,7 +473,7 @@ for x in range(IMAGE_PER_ROW):
 
 print("No faces Save composite image...")
 dst.save("nofaces.png", format="png", optimize=True)
-#processed_train_df = train_df.drop(train_df.index[MTNN_NOFACES])
+# processed_train_df = train_df.drop(train_df.index[MTNN_NOFACES])
 processed_train_df = train_df
 
 print(train_df["max_gray_count"].describe())
@@ -524,7 +524,7 @@ for index, row in big_eye_y_distance_images.iterrows():
     fig.add_subplot(rows, cols, i)
     img = plt.imshow(row["image_as_np"], cmap="gray", vmin=0, vmax=255)
     i += 1
-#plt.show()
+# plt.show()
 
 
 print(train_df["gray_levels"].describe())

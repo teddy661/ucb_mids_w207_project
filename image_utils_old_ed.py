@@ -4,7 +4,7 @@ import re
 import sqlite3
 from io import BytesIO
 from pathlib import Path
-import pandas as pd 
+import pandas as pd
 
 from PIL import Image, ImageDraw
 
@@ -40,6 +40,7 @@ def get_image_from_db(sqcur, rowid):
     else:
         return rows[0][2]
 
+
 def get_total_image_count(sqcur):
     query = """
     SELECT 
@@ -50,6 +51,7 @@ def get_total_image_count(sqcur):
     sqcur.execute(query)
     rows = sqcur.fetchall()
     return rows[0][0]
+
 
 def get_images_missing_data(sqcur, col_root_name):
     query = """
@@ -341,13 +343,20 @@ def main():
     data_table_list = []
     data_cols = get_data_column_names(sqcur)
     for col in data_cols:
-        data_table_list.append([col,100*len(get_images_missing_data(sqcur, col))/get_total_image_count(sqcur) ])
-    df = pd.DataFrame(data_table_list, columns = ['Feature', 'Percent Missing'])
+        data_table_list.append(
+            [
+                col,
+                100
+                * len(get_images_missing_data(sqcur, col))
+                / get_total_image_count(sqcur),
+            ]
+        )
+    df = pd.DataFrame(data_table_list, columns=["Feature", "Percent Missing"])
     pd.options.display.float_format = "{:,.2f}".format
-    df.sort_values(by=['Percent Missing'], ascending=False, inplace=True)
+    df.sort_values(by=["Percent Missing"], ascending=False, inplace=True)
     df.reset_index(inplace=True)
     print(df.to_markdown(tablefmt="grid"))
- 
+
     ##### Counts up duplicate pictures
     print("")
     print("")
@@ -358,7 +367,7 @@ def main():
         print(f"Count: {image[0]} Hash (first 10 only): {image[1]}")
         print(f"Lenght of duplicates: {len(duplicate_images)}")
         print(f"Total Count:\t{total_count}")
-        #rowids = get_rowid_from_hash(sqcur, image[1])
+        # rowids = get_rowid_from_hash(sqcur, image[1])
     #     tgt = Image.new("RGB", (96 * len(rowids), 96))
     #     x = 0
     #     for rowid in rowids:
@@ -379,17 +388,15 @@ def main():
     for image in unique_images:
         image_data = get_image_from_db(sqcur, image[0])
         buf_image_data = BytesIO(image_data)
-        unique_images_annotated.append(
-            buf_image_data
-        )
+        unique_images_annotated.append(buf_image_data)
     # factors of 7049
     # 1 | 7 | 19 | 53 | 133 | 371 | 1007 | 7049
-    #dst = Image.new("RGB", (96 * 19, 96 * 100))
+    # dst = Image.new("RGB", (96 * 19, 96 * 100))
     i = 0
     # print("Build composite image")
     # for y in range(100):
     #     if i > 1782:
-    #         break   
+    #         break
     #     for x in range(19):
     #         im = Image.open(unique_images_annotated[i])
     #         #dst.paste(im, (x * 96, y * 96))
@@ -397,12 +404,12 @@ def main():
     #         i = i + 1
     #         if i > 1782:
     #             break
-    for idx,image in enumerate(unique_images_annotated):
+    for idx, image in enumerate(unique_images_annotated):
         im = Image.open(unique_images_annotated[idx])
         im.save(f"image_{idx}.png", format="png", optmize=True)
         im.close()
     print("Save composite image")
-    #dst.save("test_composite_image.png", format="png", optimize=True)
+    # dst.save("test_composite_image.png", format="png", optimize=True)
 
     sqcon.close()
 

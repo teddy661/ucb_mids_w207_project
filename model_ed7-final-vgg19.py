@@ -124,9 +124,9 @@ conv_102 = keras.layers.Conv2D(
     activation="relu",
 )(norm_101)
 norm_102 = keras.layers.BatchNormalization(name="norm_102")(conv_102)
-maxp_101 = keras.layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding="same", name="maxp_101")(
-    norm_102
-)
+maxp_101 = keras.layers.MaxPooling2D(
+    pool_size=(2, 2), strides=(2, 2), padding="same", name="maxp_101"
+)(norm_102)
 
 conv_201 = keras.layers.Conv2D(
     filters=128,
@@ -148,7 +148,7 @@ conv_202 = keras.layers.Conv2D(
     activation="relu",
 )(norm_201)
 norm_202 = keras.layers.BatchNormalization(name="norm_202")(conv_202)
-maxp_201 = keras.layers.MaxPooling2D(pool_size=(2, 2),  padding="same", name="maxp_201")(
+maxp_201 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_201")(
     norm_202
 )
 
@@ -283,7 +283,6 @@ norm_504 = keras.layers.BatchNormalization(name="norm_504")(conv_504)
 maxp_501 = keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same", name="maxp_501")(
     norm_504
 )
-
 
 
 ##
@@ -534,11 +533,8 @@ model_checkpoint = ModelCheckpoint(
 )
 
 reduce_lr_on_plateau = ReduceLROnPlateau(
-    monitor='val_loss',
-    patience=4,
-    verbose=1,
-    factor=0.3,
-    min_lr=0.000001)
+    monitor="val_loss", patience=4, verbose=1, factor=0.3, min_lr=0.000001
+)
 
 history = model.fit(
     x=X_train,
@@ -612,9 +608,9 @@ history = model.fit(
         },
     ),
     verbose=2,
-	# callbacks=[early_stopping],
+    # callbacks=[early_stopping],
     # callbacks=[early_stopping, model_checkpoint],
-    callbacks=[early_stopping,reduce_lr_on_plateau],
+    callbacks=[early_stopping, reduce_lr_on_plateau],
 )
 
 

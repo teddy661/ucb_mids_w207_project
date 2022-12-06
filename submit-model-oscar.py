@@ -75,8 +75,9 @@ train_df = pd.read_csv(TEST_CSV, encoding="utf8")
 imgs_all = []
 for idx, r in test_df.iterrows():
     imgs_all.append(
-        (np.fromstring(r['Image'], dtype=np.float64, sep=' ') / 255.0)
-        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
+        (np.fromstring(r["Image"], dtype=np.float64, sep=" ") / 255.0).reshape(
+            IMAGE_WIDTH, IMAGE_HEIGHT, 1
+        )
     )
 
 test_np_data = np.array(imgs_all)

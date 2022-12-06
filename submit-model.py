@@ -76,8 +76,9 @@ test_df = pd.read_csv(TEST_CSV, encoding="utf8")
 imgs_all = []
 for idx, r in test_df.iterrows():
     imgs_all.append(
-        np.fromstring(r['Image'], dtype=np.uint8, sep=' ')
-        .reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
+        np.fromstring(r["Image"], dtype=np.uint8, sep=" ").reshape(
+            IMAGE_WIDTH, IMAGE_HEIGHT, 1
+        )
     )
 ## Let's do fun stuff
 processed_images = []
@@ -85,7 +86,7 @@ clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
 for cimage in imgs_all:
     step_1 = cv2.fastNlMeansDenoising(cimage)
     step_2 = clahe.apply(step_1)
-    step_3 = step_2.reshape(96,96,1)
+    step_3 = step_2.reshape(96, 96, 1)
     processed_images.append(step_3)
 
 # This is used below choose either processed_images or imgs_all for original
