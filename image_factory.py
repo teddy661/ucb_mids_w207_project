@@ -1,19 +1,17 @@
 import os
-from io import BytesIO
 from math import ceil
 
 from PIL import Image
 
+import data.path_utils as path_utils
 import db.db_access as dba
-from db.db_creator import get_paths
-from face_data import FaceData
 
 IMAGE_LIMT = 100
 IMAGE_PER_ROW = 10
 
 
 def main():
-    _, _, TRAIN_DB_PATH, _, _ = get_paths()
+    TRAIN_DB_PATH, _, _ = path_utils.get_data_paths()
     sqcon, sqcur = dba.get_con_and_cursor(TRAIN_DB_PATH)
 
     #### Missing features
