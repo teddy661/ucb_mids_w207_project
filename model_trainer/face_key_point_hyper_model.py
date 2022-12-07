@@ -198,7 +198,7 @@ class FaceKeyPointHyperModel(kt.HyperModel):
             kernel_size = (3, 3)
             if filter_size < 256:
                 filter_size *= 2
-            num_of_conv_layers = 3 if cur_con_layer >= 2 else 2
+            num_of_conv_layers = 2 if cur_con_layer >= 2 else 2
 
             for i in range(num_of_conv_layers):
                 conv_1 = tf.keras.layers.Conv2D(
