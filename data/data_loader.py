@@ -1,3 +1,4 @@
+import cv2
 import numpy as np
 import pandas as pd
 
@@ -26,12 +27,7 @@ def load_train_data_from_file(
     train_raw = pd.read_csv(TRAIN_DATA_PATH, encoding="utf8")
     train_clean = clean_up_data(train_raw, y_columns)
 
-    train_x_array = np.stack(
-        [
-            np.asarray(p.split(), dtype="float32").reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
-            for p in train_clean["Image"]
-        ]
-    )
+    train_x_array = pre_process_images(train_clean["Image"])
     train_y_array = np.asarray(train_clean[y_columns].values)
 
     # augment data
@@ -52,24 +48,19 @@ def load_train_data_from_file(
     return X_train, X_val, y_train, y_val
 
 
-def load_test_data_from_file() -> tuple:
+def load_test_data_from_file() -> np.ndarray:
     """
     Load test image from the given csv and transforms into standard numpy arrays.
     """
 
     _, TEST_DB_PATH, _ = path_utils.get_data_paths()
     test_raw = pd.read_csv(TEST_DB_PATH, encoding="utf8")
-    X_test = np.stack(
-        [
-            np.asarray(p.split(), dtype="float32").reshape(IMAGE_WIDTH, IMAGE_HEIGHT, 1)
-            for p in test_raw["Image"]
-        ]
-    )
+    X_test = pre_process_images(test_raw["Image"])
 
     return X_test
 
 
-def clean_up_data(raw: pd.DataFrame, y_columns: list) -> pd.DataFrame:
+def clean_up_data(raw: pd.Series, y_columns: list) -> pd.DataFrame:
     """
     Filter only for columns we care about, then drop NA
     """
@@ -79,6 +70,25 @@ def clean_up_data(raw: pd.DataFrame, y_columns: list) -> pd.DataFrame:
     clean = raw_filtered.dropna()
 
     return clean
+
+
+def pre_process_images(train_clean: pd.Series) -> np.ndarray:
+    """
+    Denoising and histogram equalization, then convert the image column in pd.DataFrame to np.ndarray
+    """
+
+    clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+    processed_images = []
+    for raw_image in train_clean:
+        image_array = np.asarray(raw_image.split(), dtype=np.uint8).reshape(
+            IMAGE_WIDTH, IMAGE_HEIGHT, 1
+        )
+        step_1 = cv2.fastNlMeansDenoising(image_array)
+        step_2 = clahe.apply(step_1)
+        step_3 = step_2.reshape(96, 96, 1)
+        processed_images.append(step_3)
+
+    return np.stack(processed_images)
 
 
 def load_data_from_db(

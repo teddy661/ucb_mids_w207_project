@@ -75,10 +75,10 @@ def augment_data(X, y):
     augmented_X = [X]
     augmented_y = [y]
     for aug in [
-        flipping_augmentation,
+        # flipping_augmentation,
         # rotate_augmentation,
         # noise_augmentation,
-        # brightness_augmentation,
+        brightness_augmentation,
     ]:
         aug_images, aug_features = aug(X, y)
         augmented_X.append(aug_images)
