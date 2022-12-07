@@ -6,7 +6,7 @@ import data.path_utils as path_utils
 import model_trainer.model_builder as model_builder
 from model_trainer.face_key_point_hyper_model import ALL_LABELS
 
-force_train = False
+force_train = True
 
 _, _, MODEL_PATH = path_utils.get_data_paths()
 """
@@ -47,7 +47,7 @@ labels_second_stage = [
 
 MODEL_NAME = "model_stage_two"
 stage_two_path = MODEL_PATH.joinpath(MODEL_NAME).joinpath(MODEL_NAME)
-if False and not force_train and stage_two_path.is_dir():  # load the trained model
+if not force_train and stage_two_path.is_dir():  # load the trained model
     model_stage_two: tf.keras.Model = tf.keras.models.load_model(stage_two_path)
 else:
     model_stage_two = model_builder.tune_two_stage_model(
