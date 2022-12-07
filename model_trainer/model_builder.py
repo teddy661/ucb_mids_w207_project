@@ -10,8 +10,10 @@ from matplotlib import pyplot as plt
 
 import data.data_loader as data_loader
 import data.path_utils as path_utils
-from model_trainer.face_key_point_hyper_model import (FaceKeyPointHyperModel,
-                                                      FaceKeyPointStageTwoHM)
+from model_trainer.face_key_point_hyper_model import (
+    FaceKeyPointHyperModel,
+    FaceKeyPointStageTwoHM,
+)
 
 ALL_Y_COLUMNS = [
     "left_eye_center_x",
