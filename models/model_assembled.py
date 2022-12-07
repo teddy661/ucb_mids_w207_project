@@ -1,5 +1,3 @@
-import os
-
 import tensorflow as tf
 
 import data.data_loader as data_loader
@@ -20,7 +18,7 @@ for label in ALL_LABELS:
     individual_model_path = MODEL_PATH.joinpath(individual_model_name).joinpath(
         individual_model_name
     )
-    if not force_train and MODEL_PATH.is_dir(): # load the trained model
+    if not force_train and individual_model_path.is_dir():  # load the trained model
         model: tf.keras.Model = tf.keras.models.load_model(individual_model_path)
     else:
         model: tf.keras.Model = model_builder.tune_model(

@@ -5,13 +5,13 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras.callbacks import (EarlyStopping, ModelCheckpoint,
-                                        ReduceLROnPlateau)
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+import cv2
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
 BATCH_SIZE = 32
-ROOT_DIR = (Path(__file__).parent.parent.parent).resolve()
+ROOT_DIR = Path(r"../facial-keypoints-detection").resolve()
 DATA_DIR = ROOT_DIR.joinpath("data")
 TRAIN_CSV = DATA_DIR.joinpath("processed_training.csv")
 MODEL_DIR = Path("./model_saves").resolve()
@@ -77,8 +77,17 @@ for idx, r in train_only_all_points.iterrows():
             IMAGE_WIDTH, IMAGE_HEIGHT, 1
         )
     )
-imgs_all = np.array(imgs_all)
+## Let's do fun stuff
+processed_images = []
+clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+for cimage in imgs_all:
+    step_1 = cv2.fastNlMeansDenoising(cimage)
+    step_2 = clahe.apply(step_1)
+    step_3 = step_2.reshape(96, 96, 1)
+    processed_images.append(step_3)
 
+# This is used below choose either processed_images or imgs_all for original
+imgs_all = np.array(processed_images)
 
 ###
 tf.random.set_seed(1234)
@@ -280,8 +289,8 @@ norm_fc2 = keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 ## Begin Output Layers
 ##
 
-nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_x")(norm_fc2)
-nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_y")(norm_fc2)
+nose_tip_x = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_X")(norm_fc2)
+nose_tip_y = keras.layers.Dense(units=1, activation=None, name="Nose_Tip_Y")(norm_fc2)
 
 
 model = tf.keras.Model(
@@ -296,12 +305,12 @@ model = tf.keras.Model(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss={
-        "Nose_Tip_x": "mse",
-        "Nose_Tip_y": "mse",
+        "Nose_Tip_X": "mse",
+        "Nose_Tip_Y": "mse",
     },
     metrics={
-        "Nose_Tip_x": "mse",
-        "Nose_Tip_y": "mse",
+        "Nose_Tip_X": "mse",
+        "Nose_Tip_Y": "mse",
     },
 )
 model.summary()
@@ -333,16 +342,16 @@ reduce_lr_on_plateau = ReduceLROnPlateau(
 history = model.fit(
     x=X_train,
     y={
-        "Nose_Tip_x": y_train[:, 20],
-        "Nose_Tip_y": y_train[:, 21],
+        "Nose_Tip_X": y_train[:, 20],
+        "Nose_Tip_Y": y_train[:, 21],
     },
     epochs=200,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
         {
-            "Nose_Tip_x": y_val[:, 20],
-            "Nose_Tip_y": y_val[:, 21],
+            "Nose_Tip_X": y_val[:, 20],
+            "Nose_Tip_Y": y_val[:, 21],
         },
     ),
     verbose=2,

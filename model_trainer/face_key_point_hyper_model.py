@@ -69,6 +69,12 @@ BEST_JOINT_HP = {
     "fc_units": 4096,
 }
 
+BEST_STAGE_ONE_HP = {
+    "num_conv_layers": 4,
+    "filter_size": 32,
+    "fc_units": 2048,
+}
+
 BEST_INDIVIDUAL_HP = {
     "num_conv_layers": 4,
     "filter_size": 32,
@@ -92,8 +98,10 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
         # get the predefined hyperparameters, since Ray already tuned it before
         self.predected_hp = {}
-        if self.name == "model_joint":
+        if self.name == "model_joint" or self.name == "model_stage_two":
             self.predected_hp = BEST_JOINT_HP
+        elif self.name == "model_stage_one":
+            self.predected_hp = BEST_STAGE_ONE_HP
         elif len(self.labels) == 1:
             self.predected_hp = BEST_INDIVIDUAL_HP
 
@@ -104,80 +112,11 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
         tf.keras.backend.clear_session()
         input_layer = tf.keras.layers.Input(
-            shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name=self.name + "InputLayer"
+            shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name="InputLayer"
         )
-        rescale = tf.keras.layers.Rescaling(
-            1.0 / 255,
-            name=self.name + "rescaling",
-            input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1),
-        )(input_layer)
 
-        ## Begin Convolutional Layers
-        prev_layer = rescale
-        num_conv_layers = (
-            self.predected_hp["num_conv_layers"]
-            if "num_conv_layers" in self.predected_hp
-            else hp.Int("num_conv_layers", 4, 6)
-        )
-        for cur_con_layer in range(num_conv_layers):
-
-            # some defaults after tuning
-            filter_size = (
-                self.predected_hp["filter_size"]
-                if "filter_size" in self.predected_hp
-                else hp.Int("filter_size", 32, 64, 32)
-            )
-            kernel_size = (3, 3)
-            # after tuning, we found that the filter size should always increase
-            filter_size *= 2
-
-            conv_1 = tf.keras.layers.Conv2D(
-                filters=filter_size,
-                kernel_size=kernel_size,
-                strides=(1, 1),
-                name=self.name + f"conv_1st_{str(cur_con_layer)}",
-                padding="same",
-                kernel_initializer="he_uniform",
-                activation="relu",
-            )(prev_layer)
-
-            norm_1 = tf.keras.layers.BatchNormalization(
-                name=self.name + f"norm_1st_{str(cur_con_layer)}",
-            )(conv_1)
-
-            conv_2 = tf.keras.layers.Conv2D(
-                filters=filter_size,
-                kernel_size=kernel_size,
-                strides=(1, 1),
-                name=self.name + f"conv_2nd_{str(cur_con_layer)}",
-                padding="same",
-                kernel_initializer="he_uniform",
-                activation="relu",
-            )(norm_1)
-
-            norm_2 = tf.keras.layers.BatchNormalization(
-                name=self.name + f"norm_2nd_{str(cur_con_layer)}",
-            )(conv_2)
-
-            maxp = tf.keras.layers.MaxPooling2D(
-                pool_size=(2, 2),
-                padding="same",
-                name=self.name + f"mpool_{str(cur_con_layer)}",
-            )(norm_2)
-
-            # after tuning, we found that the dropout is not needed
-            # if hp.Boolean("dropout"):
-            #     dropout = tf.keras.layers.Dropout(
-            #         rate=0.25,
-            #         name=self.name + f"dropout_{str(cur_con_layer)}",
-            #     )(maxp)
-            #     prev_layer = dropout
-            # else:
-            prev_layer = maxp
-
+        flat_1 = self.build_cnn_layers(hp, input_layer)
         ## Fully Connected layers
-
-        flat_1 = tf.keras.layers.Flatten()(prev_layer)
 
         fc_units = (
             self.predected_hp["fc_units"]
@@ -187,26 +126,22 @@ class FaceKeyPointHyperModel(kt.HyperModel):
 
         dense_1 = tf.keras.layers.Dense(
             fc_units,
-            name=self.name + "fc_1",
+            name="dense_1",
             kernel_initializer="he_uniform",
             activation="relu",
         )(flat_1)
-        norm_fc1 = tf.keras.layers.BatchNormalization(name=self.name + "norm_fc1")(
-            dense_1
-        )
+        norm_fc1 = tf.keras.layers.BatchNormalization(name="norm_fc1")(dense_1)
 
         # after tuning, we found that fc units should always decrease
         fc_units = fc_units // 2
 
         dense_2 = tf.keras.layers.Dense(
             fc_units,
-            name=self.name + "fc_2",
+            name="dense_2",
             kernel_initializer="he_uniform",
             activation="relu",
         )(norm_fc1)
-        norm_fc2 = tf.keras.layers.BatchNormalization(name=self.name + "norm_fc2")(
-            dense_2
-        )
+        norm_fc2 = tf.keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 
         ## Construct Output Layers, loss and metrics
         output_layers = []
@@ -236,6 +171,70 @@ class FaceKeyPointHyperModel(kt.HyperModel):
         )
 
         return model
+
+    def build_cnn_layers(self, hp: kt.HyperParameters, input_layer: tf.keras.layers):
+
+        rescale = tf.keras.layers.Rescaling(
+            1.0 / 255,
+            name="rescaling",
+            input_shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1),
+        )(input_layer)
+
+        ## Begin Convolutional Layers
+        total_num_conv_layers = (
+            self.predected_hp["num_conv_layers"]
+            if "num_conv_layers" in self.predected_hp
+            else hp.Int("num_conv_layers", 4, 6)
+        )
+
+        prev_layer = rescale
+        for cur_con_layer in range(total_num_conv_layers):
+
+            filter_size = (
+                self.predected_hp["filter_size"]
+                if "filter_size" in self.predected_hp
+                else hp.Int("filter_size", 32, 64, 32)
+            )
+            kernel_size = (3, 3)
+            if filter_size < 256:
+                filter_size *= 2
+            num_of_conv_layers = 2 if cur_con_layer >= 2 else 2
+
+            for i in range(num_of_conv_layers):
+                conv_1 = tf.keras.layers.Conv2D(
+                    filters=filter_size,
+                    kernel_size=kernel_size,
+                    strides=(1, 1),
+                    name=f"conv_{str(i)}_{str(cur_con_layer)}",
+                    padding="same",
+                    kernel_initializer="he_uniform",
+                    activation="relu",
+                )(prev_layer)
+
+                norm_1 = tf.keras.layers.BatchNormalization(
+                    name=f"norm_{str(i)}_{str(cur_con_layer)}",
+                )(conv_1)
+                prev_layer = norm_1
+
+            maxp = tf.keras.layers.MaxPooling2D(
+                pool_size=(2, 2),
+                padding="same",
+                name=f"mpool_{str(cur_con_layer)}",
+            )(prev_layer)
+
+            # after tuning, we found that the dropout is not needed
+            # if hp.Boolean("dropout"):
+            #     dropout = tf.keras.layers.Dropout(
+            #         rate=0.25,
+            #         name= f"dropout_{str(cur_con_layer)}",
+            #     )(maxp)
+            #     prev_layer = dropout
+            # else:
+            prev_layer = maxp
+
+        flat_1 = tf.keras.layers.Flatten(name="flat")(prev_layer)
+
+        return flat_1
 
     def fit(
         self,
@@ -313,3 +312,91 @@ class FaceKeyPointHyperModel(kt.HyperModel):
         callbacks.append(reduce_lr_on_plateau)
 
         return callbacks
+
+
+class FaceKeyPointStageTwoHM(FaceKeyPointHyperModel):
+    def __init__(self, labels, name=None, tunable=True):
+        super().__init__(labels, name, tunable)
+
+    def build(self, hp: kt.HyperParameters) -> tf.keras.Model:
+        """
+        Builds the model with the hyperparameters, used by the tuner later.
+        This is the second stage of the model, where we use the output of the first stage
+        """
+
+        tf.keras.backend.clear_session()
+
+        input_layer_stage_1 = tf.keras.layers.Input(shape=(8), name="input_stage_1")
+        norm_stage_1 = tf.keras.layers.BatchNormalization(name="norm_stage_1")(
+            input_layer_stage_1
+        )
+        stage_1_dense_1 = tf.keras.layers.Dense(
+            4,
+            name="dense_1_stage_1",
+            kernel_initializer="he_uniform",
+            activation="relu",
+        )(norm_stage_1)
+        last_layer_stage_1 = stage_1_dense_1
+
+        input_layer_stage_2 = tf.keras.layers.Input(
+            shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name="input_stage_2"
+        )
+        flat_stage_2 = self.build_cnn_layers(hp, input_layer_stage_2)
+
+        # connect two layers together from stage 1 and stage 2
+        concatenate_layer = tf.keras.layers.Concatenate()(
+            [last_layer_stage_1, flat_stage_2]
+        )
+
+        fc_units = (
+            self.predected_hp["fc_units"]
+            if "fc_units" in self.predected_hp
+            else hp.Choice("fc_units", [2048, 4096, 8192])
+        )
+        dense_1 = tf.keras.layers.Dense(
+            fc_units,
+            name="dense_1",
+            kernel_initializer="he_uniform",
+            activation="relu",
+        )(concatenate_layer)
+        norm_fc1 = tf.keras.layers.BatchNormalization(name="norm_fc1")(dense_1)
+
+        # after tuning, we found that fc units should always decrease
+        fc_units = fc_units // 2
+
+        dense_2 = tf.keras.layers.Dense(
+            fc_units,
+            name="dense_2",
+            kernel_initializer="he_uniform",
+            activation="relu",
+        )(norm_fc1)
+        norm_fc2 = tf.keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
+
+        ## Construct Output Layers, loss and metrics
+        output_layers = []
+        loss_dict = {}
+        metrics_dict = {}
+        for col_name in self.get_column_names():
+            output_layers.append(
+                tf.keras.layers.Dense(
+                    units=1,
+                    activation=None,
+                    name=col_name,
+                )(norm_fc2)
+            )
+            loss_dict[col_name] = "mse"
+            metrics_dict[col_name] = "mse"
+
+        model = tf.keras.Model(
+            inputs=[input_layer_stage_1, input_layer_stage_2],
+            outputs=output_layers,
+            name=self.name,
+        )
+
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(),
+            loss=loss_dict,
+            metrics=metrics_dict,
+        )
+
+        return model

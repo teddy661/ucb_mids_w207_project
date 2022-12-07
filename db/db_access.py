@@ -4,8 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
+from db.face_data import FaceData, Point
 from db.image_utils import create_image_from_pixels
-from face_data import FaceData, Point
 
 
 def get_con_and_cursor(db_path: Path):

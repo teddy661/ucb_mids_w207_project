@@ -12,7 +12,10 @@ Expected file structure:
 |   |-- *.csv
 ├── db
 |   |-- *.db
-|-- knn
+|-- model_trainer
+|   |-- all python codes that builds, tunes and visualize the models
+|-- models
+|   |-- all python files that actually trains the models and predict the test data
 └── README.md
 ```
 

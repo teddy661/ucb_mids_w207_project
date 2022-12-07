@@ -4,12 +4,11 @@ import re
 import sqlite3
 from io import BytesIO
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 from PIL import Image, ImageDraw
 
-from face_data import FaceData
-from face_data import Point
+from db.face_data import FaceData, Point
 
 
 def get_image_from_db(sqcur, rowid):

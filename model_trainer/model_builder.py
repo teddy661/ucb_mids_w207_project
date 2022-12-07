@@ -10,7 +10,10 @@ from matplotlib import pyplot as plt
 
 import data.data_loader as data_loader
 import data.path_utils as path_utils
-from model_trainer.face_key_point_hyper_model import FaceKeyPointHyperModel
+from model_trainer.face_key_point_hyper_model import (
+    FaceKeyPointHyperModel,
+    FaceKeyPointStageTwoHM,
+)
 
 ALL_Y_COLUMNS = [
     "left_eye_center_x",
@@ -46,7 +49,10 @@ ALL_Y_COLUMNS = [
 ]
 
 
-def tune_model(labels_to_include, model_name, additional_inputs:np.ndarray = None) -> tf.keras.Model:
+def tune_model(
+    labels_to_include,
+    model_name,
+) -> tf.keras.Model:
     """
     Tune a modle using the given labels
     """
@@ -101,7 +107,7 @@ def tune_model(labels_to_include, model_name, additional_inputs:np.ndarray = Non
     history: tf.keras.callbacks.History = model.fit(
         x=X_train,
         y=y_train,
-        batch_size=128,  # best_hp.values["batch_size"],
+        batch_size=64,  # best_hp.values["batch_size"],
         epochs=200,
         validation_data=(X_val, y_val),
         callbacks=hm.get_callbacks(hp=best_hp),
@@ -114,6 +120,91 @@ def tune_model(labels_to_include, model_name, additional_inputs:np.ndarray = Non
 
     model.save(current_path.joinpath(model_name), overwrite=True)
     model.summary()
+
+    return model
+
+
+def tune_two_stage_model(
+    labels_to_include,
+    model_name,
+    model_stage_one: tf.keras.Model,
+) -> tf.keras.Model:
+    """
+    Tune a modle using the given labels
+    """
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+    tf.get_logger().setLevel("INFO")
+    tf.random.set_seed(1234)
+
+    hm = FaceKeyPointStageTwoHM(labels=labels_to_include, name=model_name)
+
+    # Data Preprocessing
+    _, _, MODEL_PATH = path_utils.get_data_paths()
+    current_path = MODEL_PATH.joinpath(model_name)
+
+    X_train, X_val, y_train, y_val = data_loader.load_train_data_from_file(
+        y_columns=hm.get_column_names()
+    )
+    y_train = hm.convert_y_to_outputs(y_train)
+    y_val = hm.convert_y_to_outputs(y_val)
+
+    tuner = kt.Hyperband(
+        hm,
+        objective="val_loss",
+        seed=1234,
+        max_epochs=100,  # Hyperband automatically picks the best num of epochs, but this is the max you allow
+        executions_per_trial=2,  # avergae out the results of 2 trials
+        overwrite=True,
+        directory=current_path,
+        project_name=model_name + "_tuning",
+    )
+
+    y_stage_1 = np.asarray(model_stage_one.predict(X_train)).reshape(8, -1).transpose()
+    y_val_stage_1 = (
+        np.asarray(model_stage_one.predict(X_val)).reshape(8, -1).transpose()
+    )
+
+    tuner.search_space_summary()
+    tuner.search(
+        [y_stage_1, X_train],
+        y_train,
+        validation_data=([y_val_stage_1, X_val], y_val),
+        verbose=1,
+    )
+
+    # get the best hyperparameters, and re-train the model
+    best_hp = next(iter(tuner.get_best_hyperparameters()), None)
+
+    if best_hp is not None:
+        with open(
+            current_path.joinpath(model_name + "_best_hp.json"), "w"
+        ) as best_hp_file:
+            json.dump(best_hp.values, best_hp_file)
+    else:
+        best_hp = kt.HyperParameter("default")
+
+    model: tf.keras.Model = tuner.hypermodel.build(best_hp)
+    history: tf.keras.callbacks.History = model.fit(
+        x=[y_stage_1, X_train],
+        y=y_train,
+        batch_size=64,  # best_hp.values["batch_size"],
+        epochs=200,
+        validation_data=([y_val_stage_1, X_val], y_val),
+        callbacks=hm.get_callbacks(hp=best_hp),
+    )
+
+    with open(current_path.joinpath(model_name + "_history"), "wb") as best_hp_file:
+        pickle.dump(history.history, best_hp_file, protocol=pickle.HIGHEST_PROTOCOL)
+
+    plot_model_history(model_name, history.history)
+
+    model.save(current_path.joinpath(model_name), overwrite=True)
+    tf.keras.utils.plot_model(
+        model,
+        to_file=current_path.joinpath("model_plot.png"),
+        show_shapes=False,
+        show_layer_names=False,
+    )
 
     return model
 
@@ -176,18 +267,16 @@ def plot_model_history(model_name: str, history: dict = None):
         ) as history_file:
             history = pickle.load(history_file)
 
-    x_arr = np.arange(len(history["loss"][:-30])) + 1
+    x_arr = np.arange(len(history["loss"][-30:])) + 1
 
     fig = plt.figure(figsize=(12, 4))
     fig.suptitle(model_name)
     ax = fig.add_subplot(1, 2, 1)
-    ax.plot(x_arr, history["loss"][:-30], "-o", label="Train loss")
-    ax.plot(x_arr, history["val_loss"][:-30], "--<", label="Validation loss")
+    ax.plot(x_arr, history["loss"][-30:], "-o", label="Train loss")
+    ax.plot(x_arr, history["val_loss"][-30:], "--<", label="Validation loss")
     ax.legend(fontsize=15)
     ax.set_xlabel("Epoch", size=15)
     ax.set_ylabel("Loss", size=15)
 
-    print(history["val_loss"][:-10])
-    plt.show()
-
-    print("done")
+    print(history["val_loss"][-10:])
+    plt.show(block=False)

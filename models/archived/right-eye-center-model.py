@@ -6,6 +6,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+import cv2
 
 IMAGE_HEIGHT = 96
 IMAGE_WIDTH = 96
@@ -76,8 +77,17 @@ for idx, r in train_only_all_points.iterrows():
             IMAGE_WIDTH, IMAGE_HEIGHT, 1
         )
     )
-imgs_all = np.array(imgs_all)
+## Let's do fun stuff
+processed_images = []
+clahe = cv2.createCLAHE(clipLimit=4, tileGridSize=(8, 8))
+for cimage in imgs_all:
+    step_1 = cv2.fastNlMeansDenoising(cimage)
+    step_2 = clahe.apply(step_1)
+    step_3 = step_2.reshape(96, 96, 1)
+    processed_images.append(step_3)
 
+# This is used below choose either processed_images or imgs_all for original
+imgs_all = np.array(processed_images)
 
 ###
 tf.random.set_seed(1234)
@@ -280,10 +290,10 @@ norm_fc2 = keras.layers.BatchNormalization(name="norm_fc2")(dense_2)
 ##
 
 right_eye_center_x = keras.layers.Dense(
-    units=1, activation=None, name="Right_Eye_Center_x"
+    units=1, activation=None, name="Right_Eye_Center_X"
 )(norm_fc2)
 right_eye_center_y = keras.layers.Dense(
-    units=1, activation=None, name="Right_Eye_Center_y"
+    units=1, activation=None, name="Right_Eye_Center_Y"
 )(norm_fc2)
 
 
@@ -299,12 +309,12 @@ model = tf.keras.Model(
 model.compile(
     optimizer=tf.keras.optimizers.Adam(),
     loss={
-        "Right_Eye_Center_x": "mse",
-        "Right_Eye_Center_y": "mse",
+        "Right_Eye_Center_X": "mse",
+        "Right_Eye_Center_Y": "mse",
     },
     metrics={
-        "Right_Eye_Center_x": "mse",
-        "Right_Eye_Center_y": "mse",
+        "Right_Eye_Center_X": "mse",
+        "Right_Eye_Center_Y": "mse",
     },
 )
 model.summary()
@@ -336,16 +346,16 @@ reduce_lr_on_plateau = ReduceLROnPlateau(
 history = model.fit(
     x=X_train,
     y={
-        "Right_Eye_Center_x": y_train[:, 2],
-        "Right_Eye_Center_y": y_train[:, 3],
+        "Right_Eye_Center_X": y_train[:, 2],
+        "Right_Eye_Center_Y": y_train[:, 3],
     },
     epochs=200,
     batch_size=BATCH_SIZE,
     validation_data=(
         X_val,
         {
-            "Right_Eye_Center_x": y_val[:, 2],
-            "Right_Eye_Center_y": y_val[:, 3],
+            "Right_Eye_Center_X": y_val[:, 2],
+            "Right_Eye_Center_Y": y_val[:, 3],
         },
     ),
     verbose=2,
