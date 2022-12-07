@@ -198,7 +198,7 @@ class FaceKeyPointHyperModel(kt.HyperModel):
             kernel_size = (3, 3)
             if filter_size < 256:
                 filter_size *= 2
-            num_of_conv_layers = 2 if cur_con_layer >= 2 else 1
+            num_of_conv_layers = 3 if cur_con_layer >= 2 else 2
 
             for i in range(num_of_conv_layers):
                 conv_1 = tf.keras.layers.Conv2D(
@@ -330,15 +330,13 @@ class FaceKeyPointStageTwoHM(FaceKeyPointHyperModel):
         norm_stage_1 = tf.keras.layers.BatchNormalization(name="norm_stage_1")(
             input_layer_stage_1
         )
-        last_layer_stage_1 = norm_stage_1
-
-        # stage_1_dense_1 = tf.keras.layers.Dense(
-        #     8,
-        #     name="dense_1_stage_1",
-        #     kernel_initializer="he_uniform",
-        #     activation="relu",
-        # )(last_layer_stage_1)
-        # last_layer_stage_1 = stage_1_dense_1
+        stage_1_dense_1 = tf.keras.layers.Dense(
+            4,
+            name="dense_1_stage_1",
+            kernel_initializer="he_uniform",
+            activation="relu",
+        )(norm_stage_1)
+        last_layer_stage_1 = stage_1_dense_1
 
         input_layer_stage_2 = tf.keras.layers.Input(
             shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name="input_stage_2"

@@ -277,4 +277,4 @@ def plot_model_history(model_name: str, history: dict = None):
     ax.set_ylabel("Loss", size=15)
 
     print(history["val_loss"][-10:])
-    plt.show(block=True)
+    plt.show(block=False)
