@@ -6,7 +6,7 @@ import data.path_utils as path_utils
 import model_trainer.model_builder as model_builder
 from model_trainer.face_key_point_hyper_model import ALL_LABELS
 
-force_train = True
+force_train = False
 
 _, _, MODEL_PATH = path_utils.get_data_paths()
 """
@@ -24,7 +24,7 @@ labels_first_stage = [
 stage_one_path = MODEL_PATH.joinpath(model_name_stage_one).joinpath(
     model_name_stage_one
 )
-if True or (not force_train and stage_one_path.is_dir()):  # load the trained model
+if not force_train and stage_one_path.is_dir():  # load the trained model
     model_stage_one: tf.keras.Model = tf.keras.models.load_model(stage_one_path)
 else:
     model_stage_one: tf.keras.Model = model_builder.tune_model(
@@ -47,7 +47,7 @@ labels_second_stage = [
 
 MODEL_NAME = "model_stage_two"
 stage_two_path = MODEL_PATH.joinpath(MODEL_NAME).joinpath(MODEL_NAME)
-if not force_train and stage_two_path.is_dir():  # load the trained model
+if False and not force_train and stage_two_path.is_dir():  # load the trained model
     model_stage_two: tf.keras.Model = tf.keras.models.load_model(stage_two_path)
 else:
     model_stage_two = model_builder.tune_two_stage_model(
@@ -55,13 +55,6 @@ else:
         model_name=MODEL_NAME,
         model_stage_one=model_stage_one,
     )
-
-tf.keras.utils.plot_model(
-    model_stage_two,
-    to_file=MODEL_PATH.joinpath(MODEL_NAME).joinpath("model_plot.png"),
-    show_shapes=True,
-    show_layer_names=True,
-)
 
 X_test = data_loader.load_test_data_from_file()
 results_stage_1 = model_stage_one.predict(X_test, batch_size=32, verbose=1)

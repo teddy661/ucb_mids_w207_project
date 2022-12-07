@@ -199,7 +199,7 @@ def tune_two_stage_model(
     model.save(current_path.joinpath(model_name), overwrite=True)
     tf.keras.utils.plot_model(
         model,
-        to_file=current_path + "model_plot.png",
+        to_file=current_path.joinpath("model_plot.png"),
         show_shapes=False,
         show_layer_names=False,
     )

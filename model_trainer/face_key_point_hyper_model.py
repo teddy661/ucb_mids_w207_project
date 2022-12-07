@@ -333,20 +333,13 @@ class FaceKeyPointStageTwoHM(FaceKeyPointHyperModel):
         last_layer_stage_1 = norm_stage_1
 
         stage_1_dense_1 = tf.keras.layers.Dense(
-            16,
-            name="dense_stage_1",
-            kernel_initializer="he_uniform",
-            activation="relu",
-        )(norm_stage_1)
-
-        stage_1_dense_2 = tf.keras.layers.Dense(
             8,
-            name="dense_2_stage_1",
+            name="dense_1_stage_1",
             kernel_initializer="he_uniform",
             activation="relu",
-        )(stage_1_dense_1)
+        )(last_layer_stage_1)
 
-        last_layer_stage_1 = stage_1_dense_2
+        last_layer_stage_1 = stage_1_dense_1
 
         input_layer_stage_2 = tf.keras.layers.Input(
             shape=(IMAGE_HEIGHT, IMAGE_WIDTH, 1), name="input_stage_2"
